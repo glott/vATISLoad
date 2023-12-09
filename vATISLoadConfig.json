@@ -1,0 +1,22 @@
+{
+    "facilities":
+    {
+        "ZOA":
+        [
+            "SFO",
+            "OAK",
+            "SJC",
+            "SMF",
+            "RNO"
+        ],
+        "ZMA":
+        [
+            "MIA",
+            "FLL",
+            "TPA",
+            "RSW",
+            "PBI"
+        ]
+    },
+    "timeout": 2
+}
