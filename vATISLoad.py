@@ -208,7 +208,11 @@ def get_atis(ident):
     atis_data = json.loads(urllib.request.urlopen(url).read())
     for n in range(0, len(atis_data)):
         datis = atis_data[n]['datis']
-        if n == 0:
+        if atis_type == 'C' and n == 0:
+            code = atis_data[n]['code']
+        elif atis_type == 'D' and atis_data[n]['type'] == 'dep':
+            code = atis_data[n]['code']
+        elif atis_type == 'A' and atis_data[n]['type'] == 'arr':
             code = atis_data[n]['code']
 
         datis = re.sub('.*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ', '', datis)
