@@ -1,7 +1,7 @@
 #####################################################################
 ########################### vATISLoad.py ############################
 #####################################################################
-import subprocess, sys, os, time, json, re, urllib.request, uuid
+import subprocess, sys, os, time, json, re, urllib.request, uuid, ctypes
 
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
@@ -22,10 +22,12 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     os.execv(sys.executable, ['python'] + sys.argv)
 else:
     os.system('cls')
-
+    
 import pyautogui, psutil, pyperclip, pygetwindow as gw
 from win32 import win32api, win32gui, win32gui, win32process
 from win32.lib import win32con
+
+scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 
 def read_config():
     profiles = {}
@@ -127,6 +129,8 @@ def center_win(exe_name, window_title):
 
 def click_xy(xy, win, d=0):
     x, y = xy
+    x *= scale_factor
+    y *= scale_factor
     x += win.left
     y += win.top
     time.sleep(d)
@@ -283,7 +287,7 @@ def add_profile(facility, airports):
 
 # Center command prompt
 for win in gw.getAllWindows():
-    if 'py.exe' in win.title or 'vATIS' in win.title:
+    if 'py.exe' in win.title: 
         screen_dim = [win32api.GetSystemMetrics(0), \
             win32api.GetSystemMetrics(1)]
         win.moveTo(int((screen_dim[0] - win.size[0]) / 2), \
@@ -401,7 +405,9 @@ for ident in AIRPORTS:
     click_xy([720, 330], win)
     state = ''
     for i in range(0, int(10 * TIMEOUT)):
-        pix = pyautogui.pixel(win.left + 118, win.top + 109)
+        pix_x = int(scale_factor * (win.left + 118))
+        pix_y = int(scale_factor * (win.top + 109))
+        pix = pyautogui.pixel(pix_x, pix_y)
         # Check if METAR loads (white 'K')
         if pix[0] == 255:
             state = 'CON'
