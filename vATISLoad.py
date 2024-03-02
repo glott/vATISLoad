@@ -405,15 +405,15 @@ for ident in AIRPORTS:
     click_xy([720, 330], win)
     state = ''
     for i in range(0, int(10 * TIMEOUT)):
-        pix_x = int(scale_factor * (win.left + 118))
-        pix_y = int(scale_factor * (win.top + 109))
-        pix = pyautogui.pixel(pix_x, pix_y)
+        pix_x = int(scale_factor * 118)
+        pix_y = int(scale_factor * 104)
+        pix = pyautogui.pixel(win.left + pix_x, win.top + pix_y)
         # Check if METAR loads (white 'K')
-        if pix[0] == 255:
+        if pix[0] >= 248 or pix[1] >= 248:
             state = 'CON'
             break
         # Check if ATIS is already connected (red 'N')
-        elif pix[0] == 230:
+        elif pix[0] >= 220 and pix[0] <= 230:
             state = 'ON'
             break
         time.sleep(.1)
