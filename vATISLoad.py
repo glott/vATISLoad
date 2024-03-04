@@ -121,7 +121,7 @@ def center_win(exe_name, window_title):
     
     # Move window to foreground
     hwnd = win._hWnd
-    pyautogui.FAILSAFE= False
+    pyautogui.FAILSAFE = False
     pyautogui.press('alt')
     win32gui.SetForegroundWindow(hwnd)
     
@@ -447,7 +447,10 @@ for window in gw.getAllWindows():
             win = window
 
 win.moveTo(int(win32api.GetSystemMetrics(0) - win.size[0] \
-            + 205 * scale_factor), int(-35 * scale_factor))
+            + 205 * scale_factor), int(-33 * scale_factor))
+hwnd = win._hWnd
+pyautogui.press('alt')
+win32gui.SetForegroundWindow(hwnd)
 
 # Determine mouse position (and color) on held left click
 def mouse_position(color=False):
