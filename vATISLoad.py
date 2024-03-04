@@ -430,11 +430,24 @@ for ident in AIRPORTS:
         else:  
             print(f'{ident.upper()} - UN')
 
-# Minimize vATIS
+# Move vATIS MiniDisplay to upper right corner
 pyperclip.copy('')
-win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
+# win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
+click_xy([778, 22], win)
+time.sleep(.1)
 
-time.sleep(3)
+for window in gw.getAllWindows():
+    hwnd = window._hWnd
+    thread_id, process_id = win32process.GetWindowThreadProcessId(hwnd)
+    process = psutil.Process(process_id)
+    process_name = process.name()
+    process_path = process.exe()
+    if 'vATIS' in process_path:
+        if window.title == 'MiniDisplay':
+            win = window
+
+win.moveTo(int(win32api.GetSystemMetrics(0) - win.size[0] \
+            + 205 * scale_factor), int(-35 * scale_factor))
 
 # Determine mouse position (and color) on held left click
 def mouse_position(color=False):
