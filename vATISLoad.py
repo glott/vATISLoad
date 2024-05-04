@@ -1,7 +1,7 @@
 #####################################################################
 ########################### vATISLoad.py ############################
 #####################################################################
-import subprocess, sys, os, time, json, re, urllib.request, uuid, ctypes
+import subprocess, sys, os, time, json, re, requests, uuid, ctypes
 
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
@@ -209,7 +209,7 @@ def get_atis(ident):
     url = 'https://datis.clowd.io/api/' + ident
 
     atis_info, code = [], ''
-    atis_data = json.loads(urllib.request.urlopen(url).read())
+    atis_data = json.loads(requests.get(url).text)
     for n in range(0, len(atis_data)):
         datis = atis_data[n]['datis']
         if atis_type == 'C' and n == 0:
@@ -430,27 +430,9 @@ for ident in AIRPORTS:
         else:  
             print(f'{ident.upper()} - UN')
 
-# Move vATIS MiniDisplay to upper right corner
 pyperclip.copy('')
-# win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
-click_xy([778, 22], win)
-time.sleep(.1)
-
-for window in gw.getAllWindows():
-    hwnd = window._hWnd
-    thread_id, process_id = win32process.GetWindowThreadProcessId(hwnd)
-    process = psutil.Process(process_id)
-    process_name = process.name()
-    process_path = process.exe()
-    if 'vATIS' in process_path:
-        if window.title == 'MiniDisplay':
-            win = window
-
-win.moveTo(int(win32api.GetSystemMetrics(0) - win.size[0] \
-            + 205 * scale_factor), int(-33 * scale_factor))
-hwnd = win._hWnd
-pyautogui.press('alt')
-win32gui.SetForegroundWindow(hwnd)
+time.sleep(3)
+win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
 
 # Determine mouse position (and color) on held left click
 def mouse_position(color=False):
