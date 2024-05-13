@@ -2,7 +2,7 @@
 
 _by Josh Glottmann_
 
-**Version 1.2.4** - 05/04/2024
+**Version 1.2.5** - 05/12/2024
 
 Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.clowd.io/) by [Justin Shannon](https://github.com/JustinShannon)
 

@@ -210,6 +210,9 @@ def get_atis(ident):
 
     atis_info, code = [], ''
     atis_data = json.loads(requests.get(url).text)
+    if 'error' in atis_data:
+        return [], ''
+    
     for n in range(0, len(atis_data)):
         datis = atis_data[n]['datis']
         if atis_type == 'C' and n == 0:
@@ -287,10 +290,10 @@ def add_profile(facility, airports):
 
 # Center command prompt
 for win in gw.getAllWindows():
-    if 'py.exe' in win.title: 
+    if 'py.exe' in win.title or win.title == 'vATIS': 
         screen_dim = [win32api.GetSystemMetrics(0), \
             win32api.GetSystemMetrics(1)]
-        win.moveTo(int((screen_dim[0] - win.size[0]) / 2), \
+        win.moveTo(int((screen_dim[0] - win.size[0]) / 2) - 60, \
             int((screen_dim[1] - win.size[1]) / 2))
 
 # Profile selection
@@ -381,12 +384,13 @@ for ident in AIRPORTS:
     atis, code = get_atis(ident)
     
     # Enter ARPT COND
-    click_xy([200, 250], win)
-    pyautogui.hotkey('ctrl', 'a')
-    pyautogui.press('backspace')
-    pyperclip.copy(atis[0])
-    pyautogui.hotkey('ctrl', 'v')
-    click_xy([40, 295], win)
+    if len(atis) > 0:
+        click_xy([200, 250], win)
+        pyautogui.hotkey('ctrl', 'a')
+        pyautogui.press('backspace')
+        pyperclip.copy(atis[0])
+        pyautogui.hotkey('ctrl', 'v')
+        click_xy([40, 295], win)
     
     # Enter NOTAMS
     if len(atis) > 1:
@@ -397,7 +401,7 @@ for ident in AIRPORTS:
         pyautogui.hotkey('ctrl', 'v')
         click_xy([415, 295], win)
         
-    if len(atis[0]) == 0:
+    if len(code) == 0 or len(atis[0]) == 0:
         print(f'{ident.upper()} - UN')
         continue
     
