@@ -290,7 +290,9 @@ def add_profile(facility, airports):
 
 # Center command prompt
 for win in gw.getAllWindows():
-    if 'py.exe' in win.title or win.title == 'vATIS': 
+    _, process_id = win32process.GetWindowThreadProcessId(win._hWnd)
+    process = psutil.Process(process_id)
+    if 'py.exe' in win.title or (win.title == 'vATIS' and 'vATIS.exe' not in process.exe()): 
         screen_dim = [win32api.GetSystemMetrics(0), \
             win32api.GetSystemMetrics(1)]
         win.moveTo(int((screen_dim[0] - win.size[0]) / 2) - 60, \
