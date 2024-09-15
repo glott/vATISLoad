@@ -23,8 +23,8 @@ __[Download v1.2.6](https://github.com/glott/vATISLoad/releases/latest/download/
 
 ### Configuration File
 
-- [Sample `vATISLoadConfig.json` file](https://github.com/glott/vATISLoad/blob/main/vATISLoadConfig.json)
+- [Sample configuration file](https://github.com/glott/vATISLoad/blob/main/vATISLoadConfig.json)
 
-- `vATISLoadConfig.json` saved in either `%localappdata\vATIS\` or `%localappdata\vATIS-4.0\` 
+- `vATISLoadConfig.json` is saved in either `%localappdata\vATIS\` or `%localappdata\vATIS-4.0\` 
 
 - To delete profiles, remove the section directly from the configuration file.
