@@ -12,7 +12,8 @@ __[Download v1.2.6](https://github.com/glott/vATISLoad/releases/latest/download/
 
 1) Download and install the latest version of [Python](https://www.python.org/downloads/).
 2) Launch `vATISLoad.py` and follow the prompts provided to create a configuration file and use the software. 
-3) __Do not move your mouse/type__ while ATIS data is being populated.
+3) The facility name must be the same (or partially unique) to an existing vATIS facility.
+4) __Do not move your mouse/type__ while ATIS data is being populated.
 
 ### Valid *Airports* Examples
 
