@@ -16,6 +16,12 @@
             "TPA",
             "RSW",
             "PBI"
+        ],
+        "MIA":
+        [
+            "MIA/D",
+            "MIA/A",
+            "FLL"
         ]
     },
     "timeout": 2

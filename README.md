@@ -12,3 +12,19 @@ __[Download v1.2.6](https://github.com/glott/vATISLoad/releases/latest/download/
 
 1) Download and install the latest version of [Python](https://www.python.org/downloads/).
 2) Launch `vATISLoad.py` and follow the prompts provided to create a configuration file and use the software. 
+
+### Valid *Airports* Examples
+
+- `SFO, OAK, SJC, SMF, RNO`
+
+- `MIA/D, MIA/A, FLL`
+
+- `OAK`
+
+### Configuration File
+
+- [Sample `vATISLoadConfig.json` file](https://github.com/glott/vATISLoad/blob/main/vATISLoadConfig.json)
+
+- `vATISLoadConfig.json` saved in either `%localappdata\vATIS\` or `%localappdata\vATIS-4.0\` 
+
+- To delete profiles, remove the section directly from the configuration file.
