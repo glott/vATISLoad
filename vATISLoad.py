@@ -1,13 +1,14 @@
 #####################################################################
 ########################### vATISLoad.py ############################
 #####################################################################
-import subprocess, sys, os, time, json, re, requests, uuid, ctypes
+import subprocess, sys, os, time, json, re, uuid, ctypes
 
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
 if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
             il.find_spec('pygetwindow'), il.find_spec('win32api'), \
-            il.find_spec('psutil')]:
+            il.find_spec('psutil'), il.find_spec('requests'), \
+            il.find_spec('pyscreeze')]:
     subprocess.check_call([sys.executable, '-m', 'pip', 
                        'install', 'pyautogui']);
     subprocess.check_call([sys.executable, '-m', 'pip', 
@@ -18,12 +19,17 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
                            'install', 'pywinutils']);
     subprocess.check_call([sys.executable, '-m', 'pip', 
                            'install', 'psutil']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 
+                           'install', 'requests']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 
+                           'install', 'pyscreeze']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 
+                           'install', '--upgrade', 'Pillow']);
     os.system('cls')
-    os.execv(sys.executable, ['python'] + sys.argv)
 else:
     os.system('cls')
     
-import pyautogui, psutil, pyperclip, pygetwindow as gw
+import requests, pyautogui, psutil, pyperclip, pygetwindow as gw
 from win32 import win32api, win32gui, win32gui, win32process
 from win32.lib import win32con
 
@@ -98,6 +104,19 @@ def open_vATIS():
     if not os.path.isfile(exe):
         exe = os.getenv('LOCALAPPDATA') + '\\vATIS\\Application\\vATIS.exe'
     subprocess.Popen(exe);
+    
+    for i in range(0, 10): 
+        vatis_open = False
+        for window in gw.getAllWindows():
+            _, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
+            process_path = psutil.Process(process_id).exe()
+            if 'vATIS.exe' in process_path:
+                vatis_open = True
+        if vATIS_open:
+            time.sleep(1.5)
+            return
+        else:
+            time.sleep(0.5)
 
 def center_win(exe_name, window_title):
     win = None
@@ -153,14 +172,15 @@ def get_profiles():
     return profiles
 
 def get_profile_pos(name, sort, exact=False):
+    name = name.lower()
     profiles = get_profiles()
     if sort:
-        for i in range(0, len(profiles)):
-            profiles[i] = re.sub(r'[^A-z0-9]', '', profiles[i])
         profiles.sort()
+        for i in range(0, len(profiles)):
+            profiles[i] = re.sub(r'[^A-z0-9 ]', '', profiles[i]).lower()
     for i in range(0, len(profiles)):
-        prof = profiles[i]
-        if re.sub(r'[^A-z0-9]', '', name) in prof and not exact:
+        prof = profiles[i].lower()
+        if re.sub(r'[^A-z0-9 ]', '', name) in prof and not exact:
             return i
         elif name == prof:
             return i
@@ -350,7 +370,6 @@ print(f'[{PROFILE}]')
 
 # Open vATIS
 open_vATIS()
-time.sleep(2.5)
 pyautogui.PAUSE = 0.001
 
 # Center 'vATIS Profiles' window and bring to foreground
@@ -359,6 +378,18 @@ win = center_win('vATIS.exe', 'vATIS Profiles')
 # Select profile chosen above
 win_bound = [win.left, win.top]
 n_profile = get_profile_pos(PROFILE, sort=True)
+if n_profile == -1:
+    print('Selected profile not found!')
+    print('Ensure facility name is unique/exists\n')
+    print('Rename profile in \'vATISLoadConfig.json\'')
+    print('See the README on GitHub for more info')
+    time.sleep(10)
+    sys.exit()
+elif n_profile > 18:
+    print('You must have <= 19 vATIS profiles')
+    print('vATISLoad does not support > 19 currently')
+    time.sleep(10)
+    sys.exit()
 loc_profile = [90, 40 + 14 * n_profile]
 
 click_xy(loc_profile, win)
