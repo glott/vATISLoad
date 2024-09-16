@@ -112,7 +112,7 @@ def open_vATIS():
             process_path = psutil.Process(process_id).exe()
             if 'vATIS.exe' in process_path:
                 vatis_open = True
-        if vATIS_open:
+        if vatis_open:
             time.sleep(1.5)
             return
         else:
