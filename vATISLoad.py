@@ -306,7 +306,7 @@ def add_profile(facility, airports):
         f_out.write(json.dumps(data, indent=4))
     
     os.system('cls')
-    os.execv(sys.executable, ['python'] + sys.argv)
+    subprocess.check_call([sys.executable, sys.argv[0]]);
 
 # Center command prompt
 for win in gw.getAllWindows():
