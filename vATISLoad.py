@@ -108,12 +108,10 @@ def open_vATIS():
     for i in range(0, 10): 
         vatis_open = False
         for window in gw.getAllWindows():
-            _, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
-            process_path = psutil.Process(process_id).exe()
-            if 'vATIS.exe' in process_path:
+            if 'vATIS Profiles' in window.title:
                 vatis_open = True
         if vatis_open:
-            time.sleep(1.5)
+            time.sleep(1.0)
             return
         else:
             time.sleep(0.5)
