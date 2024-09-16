@@ -46,7 +46,7 @@ def read_config():
         
     f = open(config, 'r')
     data = json.loads(f.read())
-    f.close
+    f.close()
     
     return data['facilities'], data['timeout']
 
@@ -57,7 +57,7 @@ def check_datis_profile(profile):
 
     f = open(config, 'r')
     data = json.loads(f.read())
-    f.close
+    f.close()
     
     added_datis = 0
     for i in range(0, len(data['profiles'])):
@@ -93,7 +93,7 @@ def check_datis_profile(profile):
         
             if len(save_output) == 0:
                 with open(config, 'w+') as f_out:
-                    f_out.write(json.dumps(data, indent=2))
+                    f_out.write(json.dumps(data, indent=4))
                     print('Saved new D-ATIS presets')
                     time.sleep(0.5)
                     os.system('cls')
@@ -163,7 +163,7 @@ def get_profiles():
 
     f = open(config, 'r')
     data = json.loads(f.read())
-    f.close
+    f.close()
     
     profiles = []
     for profile in data['profiles']:
@@ -195,7 +195,7 @@ def get_idents(n_profile):
 
     f = open(config, 'r')
     data = json.loads(f.read())
-    f.close
+    f.close()
 
     prof_name = data['profiles'][n_profile]['name']
     idents = []
@@ -298,12 +298,12 @@ def add_profile(facility, airports):
     else:
         f = open(config, 'r')
         data = json.loads(f.read())
-        f.close
+        f.close()
         
     data['facilities'][facility] = airports
         
     with open(config, 'w+') as f_out:
-        f_out.write(json.dumps(data, indent=2))
+        f_out.write(json.dumps(data, indent=4))
     
     os.system('cls')
     os.execv(sys.executable, ['python'] + sys.argv)
