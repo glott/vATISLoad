@@ -39,9 +39,6 @@ from win32.lib import win32con
 
 scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 
-# Ensure the scale factor is correctly set
-scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
-
 def read_config():
     profiles = {}
     timeout = 2
@@ -142,7 +139,6 @@ def check_datis_profile(profile):
                 datis_preset['airportConditions'] = ''
                 datis_preset['notams'] = ''
                 datis_preset['externalGenerator'] = {'enabled': False}
-
                 added_datis += 1
 
     if added_datis > 0:
@@ -194,7 +190,6 @@ def center_win(exe_name, window_title):
     pyautogui.FAILSAFE = False
     pyautogui.press('alt')
     win32gui.SetForegroundWindow(hwnd)
-
     return win
 
 def click_xy(xy, win, d=0):
