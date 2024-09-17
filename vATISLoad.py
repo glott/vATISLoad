@@ -3,6 +3,7 @@
 #####################################################################
 import subprocess, sys, os, time, json, re, uuid, ctypes
 
+
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
 if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
@@ -20,6 +21,8 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     subprocess.check_call([sys.executable, '-m', 'pip', 
                            'install', 'psutil']);
     subprocess.check_call([sys.executable, '-m', 'pip', 
+                           'install', 'tkinter']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 
                            'install', 'requests']);
     subprocess.check_call([sys.executable, '-m', 'pip', 
                            'install', 'pyscreeze']);
@@ -29,10 +32,14 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
 else:
     os.system('cls')
     
-import requests, pyautogui, psutil, pyperclip, pygetwindow as gw
+import requests, pyautogui, psutil, pyperclip, pygetwindow as gw, tkinter as tk
 from win32 import win32api, win32gui, win32gui, win32process
+from tkinter import messagebox, Listbox
 from win32.lib import win32con
 
+scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
+
+# Ensure the scale factor is correctly set
 scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 
 def read_config():
@@ -43,75 +50,124 @@ def read_config():
         config = os.getenv('LOCALAPPDATA') + '\\vATIS\\vATISLoadConfig.json'
         if not os.path.isfile(config):
             return profiles, timeout
-        
-    f = open(config, 'r')
-    data = json.loads(f.read())
-    f.close()
-    
+
+    with open(config, 'r') as f:
+        data = json.loads(f.read())
+
     return data['facilities'], data['timeout']
 
+def add_profile(facility, airports):
+    facility = facility.upper()
+    airports = re.sub('[^0-9A-z,/]', '', airports).upper().split(',')
+    if len(facility) == 0 or len(airports) == 0:
+        return
+
+    config_folder = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0'
+    if not os.path.exists(config_folder):
+        config_folder = os.getenv('LOCALAPPDATA') + '\\vATIS'
+    if not os.path.exists(config_folder):
+        messagebox.showerror("Error", "No vATIS folder found.")
+        return
+
+    config = os.path.join(config_folder, 'vATISLoadConfig.json')
+    data = {}
+    if not os.path.isfile(config):
+        data['facilities'] = {}
+        data['timeout'] = 2
+    else:
+        with open(config, 'r') as f:
+            data = json.loads(f.read())
+
+    data['facilities'][facility] = airports
+
+    with open(config, 'w') as f_out:
+        f_out.write(json.dumps(data, indent=4))
+
+    messagebox.showinfo("Success", f"Profile '{facility}' with airports {', '.join(airports)} added.")
+    return facility
+def delete_profile(profile):
+    config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\vATISLoadConfig.json'
+    if not os.path.isfile(config):
+        config = os.getenv('LOCALAPPDATA') + '\\vATIS\\vATISLoadConfig.json'
+
+    if not os.path.isfile(config):
+        messagebox.showerror("Error", "Configuration file not found.")
+        return
+
+    with open(config, 'r') as f:
+        data = json.loads(f.read())
+
+    if profile in data['facilities']:
+        del data['facilities'][profile]
+        messagebox.showinfo("Deleted", f"Profile '{profile}' deleted successfully.")
+    else:
+        messagebox.showwarning("Not Found", f"Profile '{profile}' not found.")
+
+    with open(config, 'w') as f_out:
+        f_out.write(json.dumps(data, indent=4))
+
+    return
 def check_datis_profile(profile):
+    # Load vATIS configuration
     config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
     if not os.path.isfile(config):
         config = os.getenv('LOCALAPPDATA') + '\\vATIS\\AppConfig.json'
 
-    f = open(config, 'r')
-    data = json.loads(f.read())
-    f.close()
-    
+    with open(config, 'r') as f:
+        data = json.loads(f.read())
+
     added_datis = 0
-    for i in range(0, len(data['profiles'])):
-        if not profile in data['profiles'][i]['name']:
+    for i in range(len(data['profiles'])):
+        if profile not in data['profiles'][i]['name']:
             continue
-        
-        for j in range(0, len(data['profiles'][i]['composites'])):
+
+        for j in range(len(data['profiles'][i]['composites'])):
             comp = data['profiles'][i]['composites'][j]
             comp_ident = comp['identifier'][1:]
-            
-            if len(comp['presets']) == 0 or \
-                'D-ATIS' not in comp['presets'][0]['name']:
+
+            if len(comp['presets']) == 0 or 'D-ATIS' not in comp['presets'][0]['name']:
                 if added_datis == 0:
-                    print('=========== vATISLoad ===========')
-                
+                    messagebox.showinfo("Information", "Creating D-ATIS presets...")
+
                 datis_preset = {}
                 if len(comp['presets']) != 0:
                     comp['presets'].insert(0, comp['presets'][0].copy())
                     datis_preset = comp['presets'][0]
                 else:
                     comp['presets'].insert(0, datis_preset)
+
+                # Set preset attributes
                 datis_preset['id'] = str(uuid.uuid4())
                 datis_preset['name'] = 'D-ATIS'
                 datis_preset['airportConditions'] = ''
                 datis_preset['notams'] = ''
                 datis_preset['externalGenerator'] = {'enabled': False}
-                print(f'Created D-ATIS preset for {comp_ident}')
+
                 added_datis += 1
-                
-        if added_datis > 0:
-            print('\nPress ENTER to save D-ATIS preset additions')
-            save_output = input('Input any other text to cancel')
-        
-            if len(save_output) == 0:
-                with open(config, 'w+') as f_out:
-                    f_out.write(json.dumps(data, indent=4))
-                    print('Saved new D-ATIS presets')
-                    time.sleep(0.5)
-                    os.system('cls')
+
+    if added_datis > 0:
+        save_output = messagebox.askyesno("Save Presets", "Would you like to save the new D-ATIS presets?")
+        if save_output:
+            with open(config, 'w') as f_out:
+                f_out.write(json.dumps(data, indent=4))
+            messagebox.showinfo("Saved", "New D-ATIS presets saved successfully.")
+        else:
+            messagebox.showinfo("Cancelled", "Preset additions were cancelled.")
+    else:
+        messagebox.showinfo("No Changes", "No new D-ATIS presets were added.")
 
 def open_vATIS():
     os.system('taskkill /f /im vATIS.exe 2>nul 1>nul')
     exe = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\Application\\vATIS.exe'
     if not os.path.isfile(exe):
         exe = os.getenv('LOCALAPPDATA') + '\\vATIS\\Application\\vATIS.exe'
-    subprocess.Popen(exe);
-    
-    for i in range(0, 10): 
-        vatis_open = False
-        for window in gw.getAllWindows():
-            if 'vATIS Profiles' in window.title:
-                vatis_open = True
+    subprocess.Popen(exe)
+
+    # Wait for the vATIS window to appear
+    for _ in range(10):
+        vatis_open = any('vATIS Profiles' in window.title for window in gw.getAllWindows())
         if vatis_open:
-            time.sleep(1.0)
+            time.sleep(1)
             return
         else:
             time.sleep(0.5)
@@ -119,29 +175,26 @@ def open_vATIS():
 def center_win(exe_name, window_title):
     win = None
 
-    # Select window
+    # Select the window
     for window in gw.getAllWindows():
         hwnd = window._hWnd
         thread_id, process_id = win32process.GetWindowThreadProcessId(hwnd)
         process = psutil.Process(process_id)
         process_name = process.name()
         process_path = process.exe()
-        if exe_name in process_path:
-            if window.title == window_title:
-                win = window
-    
-    # Move window to center
-    screen_dim = [win32api.GetSystemMetrics(0), \
-                  win32api.GetSystemMetrics(1)]
-    win.moveTo(int((screen_dim[0] - win.size[0]) / 2), \
-                  int((screen_dim[1] - win.size[1]) / 2))
-    
-    # Move window to foreground
+        if exe_name in process_path and window.title == window_title:
+            win = window
+
+    # Move the window to the center
+    screen_dim = [win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1)]
+    win.moveTo(int((screen_dim[0] - win.size[0]) / 2), int((screen_dim[1] - win.size[1]) / 2))
+
+    # Bring the window to the foreground
     hwnd = win._hWnd
     pyautogui.FAILSAFE = False
     pyautogui.press('alt')
     win32gui.SetForegroundWindow(hwnd)
-    
+
     return win
 
 def click_xy(xy, win, d=0):
@@ -153,7 +206,69 @@ def click_xy(xy, win, d=0):
     time.sleep(d)
     pyautogui.moveTo(x, y)
     pyautogui.click()
-    
+
+def run_profile(profile):
+    global root
+    profiles, TIMEOUT = read_config()
+
+    # Open vATIS and center the window
+    open_vATIS()
+    win = center_win('vATIS.exe', 'vATIS Profiles')
+
+    # Select profile
+    n_profile = get_profile_pos(profile, sort=True)
+    if n_profile == -1:
+        messagebox.showerror("Error", "Selected profile not found!")
+        return
+    elif n_profile > 18:
+        messagebox.showerror("Error", "vATISLoad does not support more than 19 profiles.")
+        return
+    loc_profile = [90, 40 + 14 * n_profile]
+
+    click_xy(loc_profile, win)
+    pyautogui.press('enter')
+
+    time.sleep(1)
+
+    # Center the vATIS window and interact with it
+    win = center_win('vATIS.exe', 'vATIS')
+
+    AIRPORTS = profiles[profile]
+    for ident in AIRPORTS:
+        tab = get_tab(ident, profile)
+        if tab == -1:
+            messagebox.showinfo("Not Found", f'{ident} NOT FOUND.')
+            continue
+
+        loc_tab = [38.6 + 53.6 * tab, 64]
+        click_xy(loc_tab, win)
+        click_xy([400, 330], win)
+        pyautogui.press(['up', 'enter'])
+
+        atis, code = get_atis(ident)
+
+        if len(atis) > 0:
+            click_xy([200, 250], win)
+            pyautogui.hotkey('ctrl', 'a')
+            pyautogui.press('backspace')
+            pyperclip.copy(atis[0])
+            pyautogui.hotkey('ctrl', 'v')
+            click_xy([40, 295], win)
+
+        if len(atis) > 1:
+            click_xy([600, 250], win)
+            pyautogui.hotkey('ctrl', 'a')
+            pyautogui.press('backspace')
+            pyperclip.copy(atis[1])
+            pyautogui.hotkey('ctrl', 'v')
+            click_xy([415, 295], win)
+
+        if len(code) == 0 or len(atis[0]) == 0:
+            messagebox.showinfo("No Code", f'{ident.upper()} - UN')
+            continue
+
+        click_xy([720, 330], win)
+    root.destroy()
 def get_profiles():
     config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
     if not os.path.isfile(config):
@@ -168,7 +283,7 @@ def get_profiles():
         profiles.append(profile['name'])
     
     return profiles
-
+        
 def get_profile_pos(name, sort, exact=False):
     profiles = get_profiles()
     if sort:
@@ -273,216 +388,68 @@ def char_position(letter):
         return -1
     return ord(letter.lower()) - 97
 
-def add_profile(facility, airports):
-    facility = facility.upper()
-    airports = re.sub('[^0-9A-z,/]', '', airports).upper().split(',')
-    if len(facility) == 0 or len(airports) == 0:
-        os.execv(sys.executable, ['python'] + sys.argv)
-        return
+def create_ui():
+    global root
+    root = tk.Tk()
+    root.title("vATIS Profile Manager")
+
+    # Load existing profiles
+    profiles, TIMEOUT = read_config()
+
+    # Listbox to display profiles
+    tk.Label(root, text="Existing Profiles").grid(row=0, column=0)
+    profile_listbox = Listbox(root)
+    for profile in profiles:
+        profile_listbox.insert(tk.END, profile)
+    profile_listbox.grid(row=1, column=0)
+
+    # Input for new facility
+    tk.Label(root, text="Facility").grid(row=2, column=0)
+    facility_entry = tk.Entry(root)
+    facility_entry.grid(row=2, column=1)
+
+    # Input for airports
+    tk.Label(root, text="Airports (comma separated)").grid(row=3, column=0)
+    airports_entry = tk.Entry(root)
+    airports_entry.grid(row=3, column=1)
+
+    # Add Profile button
+    def add_profile_action():
+        facility = facility_entry.get()
+        airports = airports_entry.get()
+        if facility and airports:
+            added_facility = add_profile(facility, airports)
+            profile_listbox.insert(tk.END, added_facility)
+        else:
+            messagebox.showwarning("Input Error", "Please fill both fields.")
+
+    add_button = tk.Button(root, text="Add Profile", command=add_profile_action)
+    add_button.grid(row=4, column=0, columnspan=2)
     
-    config_folder = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0'
-    if not os.path.exists(config_folder):
-        config_folder = os.getenv('LOCALAPPDATA') + '\\vATIS'
-    if not os.path.exists(config_folder):
-        print('No vATIS folder found.')
-        return
-    
-    config = os.path.join(config_folder, 'vATISLoadConfig.json')
-    data = {}
-    if not os.path.isfile(config):
-        data['facilities'] = {}
-        data['timeout'] = 2
-    else:
-        f = open(config, 'r')
-        data = json.loads(f.read())
-        f.close()
-        
-    data['facilities'][facility] = airports
-        
-    with open(config, 'w+') as f_out:
-        f_out.write(json.dumps(data, indent=4))
-    
-    os.system('cls')
-    subprocess.check_call([sys.executable, sys.argv[0]]);
+    def delete_profile_action():
+        selected_profile = profile_listbox.get(tk.ACTIVE)
+        if selected_profile:
+            delete_profile(selected_profile)
+            profile_listbox.delete(tk.ACTIVE)
+        else:
+            messagebox.showwarning("Selection Error", "Please select a profile.")
 
-# Center command prompt
-for win in gw.getAllWindows():
-    _, process_id = win32process.GetWindowThreadProcessId(win._hWnd)
-    process = psutil.Process(process_id)
-    if 'py.exe' in win.title or (win.title == 'vATIS' and 'vATIS.exe' not in process.exe()): 
-        screen_dim = [win32api.GetSystemMetrics(0), \
-            win32api.GetSystemMetrics(1)]
-        win.moveTo(int((screen_dim[0] - win.size[0]) / 2) - 60, \
-            int((screen_dim[1] - win.size[1]) / 2))
+    delete_button = tk.Button(root, text="Delete Profile", command=delete_profile_action)
+    delete_button.grid(row=4, column=1, columnspan=2)
 
-# Profile selection
-print('=========== vATISLoad ===========')
-profiles, TIMEOUT = read_config()
-for i in range(0, len(profiles)):
-    facility = list(profiles.keys())[i]
-    airports = ', '.join(list(profiles.values())[i])
-    print(f'({i}) {facility} - {airports}')
-    
-if len(profiles) == 0:
-    print('No vATISLoadConfig.json file found!')
-    print('Add profiles to create a configuration file.\n')
-    
-print('(A) Add new profile')
+    # Run automation button
+    def run_automation():
+        selected_profile = profile_listbox.get(tk.ACTIVE)
+        if selected_profile:
+            run_profile(selected_profile)
+        else:
+            messagebox.showwarning("Selection Error", "Please select a profile.")
 
-for i in range(0, 100):
-    idx = input('\nProfile: ')
-    if idx.isdigit():
-        idx = int(idx)
-        if idx < len(profiles):
-            break
-    elif idx.upper() == 'A':
-        os.system('cls')
-        print('=========== vATISLoad ===========')
-        print('Input the vATIS facility name')
-        print('e.g. \'Oakland ARTCC (ZOA)\'')
-        print('e.g. \'ZOA\'')
-        facility = input('\nFacility: ')
-        os.system('cls')
-        print('=========== vATISLoad ===========')
-        print('Input airports separated by commas')
-        print('DEP/ARR ATISes - add \'/D\' or \'/A\'')
-        print('e.g. \'MIA/D, MIA/A, FLL, TPA, RSW\'')
-        airports = input('\nAirports: ')
-        add_profile(facility, airports)
-        profiles, TIMEOUT = read_config()
-        idx = len(profiles) - 1
-        break
-    print(f'Invalid input! Selection must be a number ' \
-          + f'between 0 and {len(profiles) - 1}.')
+    run_button = tk.Button(root, text="Run profile", command=run_automation)
+    run_button.grid(row=5, column=0, columnspan=2)
 
-os.system('cls')
-PROFILE = list(profiles.keys())[idx]
-AIRPORTS = list(profiles.values())[idx]
+    root.mainloop()
 
-# Create missing D-ATIS presets
-check_datis_profile(PROFILE)
-
-print('=========== vATISLoad ===========')
-print(f'[{PROFILE}]')
-
-# Open vATIS
-open_vATIS()
-pyautogui.PAUSE = 0.001
-
-# Center 'vATIS Profiles' window and bring to foreground
-win = center_win('vATIS.exe', 'vATIS Profiles')
-
-# Select profile chosen above
-win_bound = [win.left, win.top]
-n_profile = get_profile_pos(PROFILE, sort=True)
-if n_profile == -1:
-    print('Selected profile not found!')
-    print('Ensure facility name is unique/exists\n')
-    print('Rename profile in \'vATISLoadConfig.json\'')
-    print('See the README on GitHub for more info')
-    time.sleep(10)
-    sys.exit()
-elif n_profile > 18:
-    print('You must have <= 19 vATIS profiles')
-    print('vATISLoad does not support > 19 currently')
-    time.sleep(10)
-    sys.exit()
-loc_profile = [90, 40 + 14 * n_profile]
-
-click_xy(loc_profile, win)
-pyautogui.press('enter')
-
-time.sleep(1)
-
-# Center 'vATIS' window and bring to foreground
-win = center_win('vATIS.exe', 'vATIS')
-
-for ident in AIRPORTS:
-    # Select tab for specified airport
-    tab = get_tab(ident, PROFILE)
-    if tab == -1:
-        print(f'{ident} NOT FOUND.')
-        continue
-    loc_tab = [38.6 + 53.6 * tab, 64]
-    click_xy(loc_tab, win)
-    
-    # Select first preset
-    click_xy([400, 330], win)
-    pyautogui.press(['up', 'enter'])
-    
-    # Get D-ATIS
-    atis, code = get_atis(ident)
-    
-    # Enter ARPT COND
-    if len(atis) > 0:
-        click_xy([200, 250], win)
-        pyautogui.hotkey('ctrl', 'a')
-        pyautogui.press('backspace')
-        pyperclip.copy(atis[0])
-        pyautogui.hotkey('ctrl', 'v')
-        click_xy([40, 295], win)
-    
-    # Enter NOTAMS
-    if len(atis) > 1:
-        click_xy([600, 250], win)
-        pyautogui.hotkey('ctrl', 'a')
-        pyautogui.press('backspace')
-        pyperclip.copy(atis[1])
-        pyautogui.hotkey('ctrl', 'v')
-        click_xy([415, 295], win)
-        
-    if len(code) == 0 or len(atis[0]) == 0:
-        print(f'{ident.upper()} - UN')
-        continue
-    
-    # Connect ATIS
-    click_xy([720, 330], win)
-    state = ''
-    for i in range(0, int(10 * TIMEOUT)):
-        pix_x = int(scale_factor * 118)
-        pix_y = int(scale_factor * 104)
-        pix = pyautogui.pixel(win.left + pix_x, win.top + pix_y)
-        # Check if METAR loads (white 'K')
-        if pix[0] >= 248 or pix[1] >= 248:
-            state = 'CON'
-            break
-        # Check if ATIS is already connected (red 'N')
-        elif pix[0] >= 220 and pix[0] <= 230:
-            state = 'ON'
-            break
-        time.sleep(.1)
-    # Set ATIS code
-    for i in range(0, char_position(code)):
-        click_xy([62, 130], win)
-    if state == 'CON':
-        print(f'{ident.upper()} - {code}')
-    elif state == 'ON':
-        print(f'{ident.upper()} - OL/{code}')
-    else:
-        if len(code) > 0:
-            print(f'{ident.upper()} - UN/{code}')
-        else:  
-            print(f'{ident.upper()} - UN')
-
-pyperclip.copy('')
-time.sleep(3)
-win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
-
-# Determine mouse position (and color) on held left click
-def mouse_position(color=False):
-    prev_xy = [-99999, -99999]
-    for i in range(0, 1000):
-        time.sleep(1)
-        if win32api.GetAsyncKeyState(0x01) >= 0:
-            continue
-        x, y = pyautogui.position()
-        win_bound = [win.left, win.top]
-        out = x - win_bound[0], y - win_bound[1]
-        if out[0] != prev_xy[0] or out[1] != prev_xy[1]:
-            if not color:
-                print(out)
-            else:
-                print(out, pyautogui.pixel(x, y))
-            prev_xy = out[:]
-            
-# mouse_position()
+# Launch the UI instead of printing profiles in console
+if __name__ == '__main__':
+    create_ui()
