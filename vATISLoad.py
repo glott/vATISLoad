@@ -170,14 +170,13 @@ def get_profiles():
     return profiles
 
 def get_profile_pos(name, sort, exact=False):
-    name = name.lower()
     profiles = get_profiles()
     if sort:
         profiles.sort()
         for i in range(0, len(profiles)):
-            profiles[i] = re.sub(r'[^A-z0-9 ]', '', profiles[i]).lower()
+            profiles[i] = re.sub(r'[^A-z0-9 ]', '', profiles[i])
     for i in range(0, len(profiles)):
-        prof = profiles[i].lower()
+        prof = profiles[i]
         if re.sub(r'[^A-z0-9 ]', '', name) in prof and not exact:
             return i
         elif name == prof:
@@ -206,7 +205,7 @@ def get_idents(n_profile):
     return idents
 
 def get_tab(airport, PROFILE):
-    idents = get_idents(get_profile_pos(PROFILE, False))
+    idents = get_idents(get_profile_pos(PROFILE, sort=False))
     for i in range(0, len(idents)):
         ident = idents[i]
         if '/' in airport:
