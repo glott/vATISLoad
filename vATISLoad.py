@@ -263,6 +263,37 @@ def run_profile(profile):
             continue
 
         click_xy([720, 330], win)
+        for _ in range(int(10 * TIMEOUT)):
+            pix_x = int(scale_factor * 118)
+            pix_y = int(scale_factor * 104)
+            pix = pyautogui.pixel(win.left + pix_x, win.top + pix_y)
+            # Check if METAR loads (white 'K')
+            if pix[0] >= 248 or pix[1] >= 248:
+                state = 'CON'
+                break
+            # Check if ATIS is already connected (red 'N')
+            elif 220 <= pix[0] <= 230:
+                state = 'ON'
+                break
+            time.sleep(.1)
+
+        # Set ATIS code
+        for i in range(char_position(code)):
+            click_xy([62, 130], win)
+
+        if state == 'CON':
+            messagebox.showinfo("ATIS State", f"ATIS connected for {ident.upper()} - {code}")
+        elif state == 'ON':
+            messagebox.showinfo("ATIS State", f"ATIS already connected for {ident.upper()} - OL/{code}")
+        else:
+            if len(code) > 0:
+                messagebox.showinfo("ATIS State", f"Unable to connect ATIS for {ident.upper()} - UN/{code}")
+            else:
+                messagebox.showinfo("ATIS State", f"Unable to connect ATIS for {ident.upper()} - UN")
+
+
+        
+        
     root.destroy()
 def get_profiles():
     config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
