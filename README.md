@@ -9,11 +9,11 @@ Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.clowd.io/) by
 __[Download v1.2.8](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.py)__ 
 
 ### Usage
-
-1) Download and install the latest version of [Python](https://www.python.org/downloads/).
-2) Launch `vATISLoad.py` and follow the prompts provided to create a configuration file and use the software. 
-3) The facility name must be the same (or partially unique) to an existing vATIS facility.
-4) __Do not move your mouse/type__ while ATIS data is being populated.
+1) verify your vatis application is in the %localappdata% folder.
+2) Download and install the latest version of [Python](https://www.python.org/downloads/).
+3) Launch `vATISLoad.py` and follow the prompts provided to create a configuration file and use the software. 
+4) The facility name must be the same (or partially unique) to an existing vATIS facility.
+5) __Do not move your mouse/type__ while ATIS data is being populated.
 
 ### Valid *Airports* Examples
 
@@ -28,5 +28,3 @@ __[Download v1.2.8](https://github.com/glott/vATISLoad/releases/latest/download/
 - [Sample configuration file](https://github.com/glott/vATISLoad/blob/main/vATISLoadConfig.json)
 
 - `vATISLoadConfig.json` is saved in either `%localappdata%\vATIS\` or `%localappdata%\vATIS-4.0\` 
-
-- To delete profiles, remove the facility's section directly from the configuration file.
