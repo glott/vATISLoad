@@ -215,6 +215,7 @@ def click_xy(xy, win, d=0):
 def run_profile(profile):
     global root
     profiles, TIMEOUT = read_config()
+    parent = tk.Toplevel()
 
     # Open vATIS and center the window
     open_vATIS()
@@ -242,7 +243,8 @@ def run_profile(profile):
     for ident in AIRPORTS:
         tab = get_tab(ident, profile)
         if tab == -1:
-            messagebox.showinfo("Not Found", f'{ident} NOT FOUND.')
+            parent.attributes('-topmost', True)
+            messagebox.showinfo("Not Found", f'{ident} NOT FOUND.',parent=parent)
             continue
 
         loc_tab = [38.6 + 53.6 * tab, 64]
@@ -269,7 +271,8 @@ def run_profile(profile):
             click_xy([415, 295], win)
 
         if len(code) == 0 or len(atis[0]) == 0:
-            messagebox.showinfo("No Code", f'{ident.upper()} - UN')
+            parent.attributes('-topmost', True)
+            messagebox.showinfo("No Code", f'{ident.upper()} - UN', parent=parent)
             continue
 
         click_xy([720, 330], win)
@@ -293,14 +296,18 @@ def run_profile(profile):
             click_xy([62, 130], win)
 
         if state == 'CON':
-            messagebox.showinfo("ATIS State", f"ATIS connected for {ident.upper()} - {code}")
+            parent.attributes('-topmost', True)
+            messagebox.showinfo("ATIS State", f"ATIS connected for {ident.upper()} - {code}", parent=parent)
         elif state == 'ON':
-            messagebox.showinfo("ATIS State", f"ATIS already connected for {ident.upper()} - OL/{code}")
+            parent.attributes('-topmost', True)
+            messagebox.showinfo("ATIS State", f"ATIS already connected for {ident.upper()} - OL/{code}",parent=parent)
         else:
             if len(code) > 0:
-                messagebox.showinfo("ATIS State", f"Unable to connect ATIS for {ident.upper()} - UN/{code}")
+                parent.attributes('-topmost', True)
+                messagebox.showinfo("ATIS State", f"Unable to connect ATIS for {ident.upper()} - UN/{code}", parent=parent)
             else:
-                messagebox.showinfo("ATIS State", f"Unable to connect ATIS for {ident.upper()} - UN")
+                parent.attributes('-topmost', True)
+                messagebox.showinfo("ATIS State", f"Unable to connect ATIS for {ident.upper()} - UN", parent=parent)
     root.destroy()
 def get_profiles():
     config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
