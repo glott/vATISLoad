@@ -51,6 +51,7 @@ scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 
 
 def read_config():
+    """ """
     profiles = {}
     timeout = 2
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\vATISLoadConfig.json"
@@ -66,6 +67,12 @@ def read_config():
 
 
 def add_profile(facility, airports):
+    """
+
+    :param facility: 
+    :param airports: 
+
+    """
     facility = facility.upper()
     airports = re.sub("[^0-9A-z,/]", "", airports).upper().split(",")
     if len(facility) == 0 or len(airports) == 0:
@@ -99,6 +106,11 @@ def add_profile(facility, airports):
 
 
 def delete_profile(profile):
+    """
+
+    :param profile: 
+
+    """
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\vATISLoadConfig.json"
     if not os.path.isfile(config):
         config = os.getenv("LOCALAPPDATA") + "\\vATIS\\vATISLoadConfig.json"
@@ -123,6 +135,7 @@ def delete_profile(profile):
 
 
 def refresh_profiles():
+    """ """
     profile_listbox.delete(0, tk.END)
     profiles, _ = read_config()
     for profile in profiles:
@@ -130,12 +143,22 @@ def refresh_profiles():
 
 
 def on_profile_double_click(event):
+    """
+
+    :param event: 
+
+    """
     selected_profile = profile_listbox.get(tk.ACTIVE)
     if selected_profile:
         run_profile(selected_profile)
 
 
 def check_datis_profile(profile):
+    """
+
+    :param profile: 
+
+    """
     # Load vATIS configuration
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\AppConfig.json"
     if not os.path.isfile(config):
@@ -187,6 +210,7 @@ def check_datis_profile(profile):
 
 
 def open_vATIS():
+    """ """
     os.system("taskkill /f /im vATIS.exe 2>nul 1>nul")
     exe = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\Application\\vATIS.exe"
     if not os.path.isfile(exe):
@@ -206,6 +230,12 @@ def open_vATIS():
 
 
 def center_win(exe_name, window_title):
+    """
+
+    :param exe_name: 
+    :param window_title: 
+
+    """
     win = None
 
     # Select the window
@@ -233,6 +263,13 @@ def center_win(exe_name, window_title):
 
 
 def click_xy(xy, win, d=0):
+    """
+
+    :param xy: 
+    :param win: 
+    :param d:  (Default value = 0)
+
+    """
     x, y = xy
     x *= scale_factor
     y *= scale_factor
@@ -244,6 +281,11 @@ def click_xy(xy, win, d=0):
 
 
 def run_profile(profile):
+    """
+
+    :param profile: 
+
+    """
     global root
     profiles, TIMEOUT = read_config()
     parent = tk.Toplevel()
@@ -361,6 +403,7 @@ def run_profile(profile):
 
 
 def get_profiles():
+    """ """
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\AppConfig.json"
     if not os.path.isfile(config):
         config = os.getenv("LOCALAPPDATA") + "\\vATIS\\AppConfig.json"
@@ -377,6 +420,13 @@ def get_profiles():
 
 
 def get_profile_pos(name, sort, exact=False):
+    """
+
+    :param name: 
+    :param sort: 
+    :param exact:  (Default value = False)
+
+    """
     profiles = get_profiles()
     if sort:
         profiles.sort()
@@ -393,6 +443,11 @@ def get_profile_pos(name, sort, exact=False):
 
 
 def get_idents(n_profile):
+    """
+
+    :param n_profile: 
+
+    """
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\AppConfig.json"
 
     if not os.path.isfile(config):
@@ -413,6 +468,12 @@ def get_idents(n_profile):
 
 
 def get_tab(airport, PROFILE):
+    """
+
+    :param airport: 
+    :param PROFILE: 
+
+    """
     idents = get_idents(get_profile_pos(PROFILE, sort=False))
     for i in range(0, len(idents)):
         ident = idents[i]
@@ -427,6 +488,11 @@ def get_tab(airport, PROFILE):
 
 
 def get_atis(ident):
+    """
+
+    :param ident: 
+
+    """
     atis_type = "C"
     if "/" in ident:
         ident, atis_type = ident.split("/")
@@ -487,12 +553,18 @@ def get_atis(ident):
 
 
 def char_position(letter):
+    """
+
+    :param letter: 
+
+    """
     if len(letter) == 0:
         return -1
     return ord(letter.lower()) - 97
 
 
 def add_profile_action():
+    """ """
     add_window = tk.Toplevel(root)
     add_window.title("Add Profile")
 
@@ -505,6 +577,7 @@ def add_profile_action():
     airports_entry.grid(row=1, column=1)
 
     def save_profile():
+        """ """
         facility = facility_entry.get()
         airports = airports_entry.get()
         if facility and airports:
@@ -520,9 +593,7 @@ def add_profile_action():
 
 
 def delete_profile_window():
-    """
-    Opens a window to select which profile to delete.
-    """
+    """Opens a window to select which profile to delete."""
     delete_window = tk.Toplevel(root)
     delete_window.title("Select Profile to Delete")
 
@@ -539,6 +610,7 @@ def delete_profile_window():
         delete_profile_listbox.insert(tk.END, profile)
 
     def delete_selected_profile():
+        """ """
         selected_profile = delete_profile_listbox.get(tk.ACTIVE)
         if not selected_profile:
             messagebox.showwarning(
@@ -592,10 +664,12 @@ def delete_profile_window():
 
 
 def open_help():
+    """ """
     webbrowser.open("https://github.com/glott/vATISLoad/blob/main/README.md")
 
 
 def create_ui():
+    """ """
     global root, profile_listbox
     root = tk.Tk()
     root.title("vATIS Auto Load")
