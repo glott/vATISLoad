@@ -70,8 +70,8 @@ def read_config():
 def add_profile(facility, airports):
     """
 
-    :param facility:
-    :param airports:
+    :param facility: param airports:
+    :param airports: 
 
     """
     facility = facility.upper()
@@ -109,7 +109,7 @@ def add_profile(facility, airports):
 def delete_profile(profile):
     """
 
-    :param profile:
+    :param profile: 
 
     """
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\vATISLoadConfig.json"
@@ -146,7 +146,7 @@ def refresh_profiles():
 def on_profile_double_click(event):
     """
 
-    :param event:
+    :param event: 
 
     """
     selected_profile = profile_listbox.get(tk.ACTIVE)
@@ -157,7 +157,7 @@ def on_profile_double_click(event):
 def check_datis_profile(profile):
     """
 
-    :param profile:
+    :param profile: 
 
     """
     # Load vATIS configuration
@@ -233,8 +233,8 @@ def open_vATIS():
 def center_win(exe_name, window_title):
     """
 
-    :param exe_name:
-    :param window_title:
+    :param exe_name: param window_title:
+    :param window_title: 
 
     """
     win = None
@@ -266,9 +266,9 @@ def center_win(exe_name, window_title):
 def click_xy(xy, win, d=0):
     """
 
-    :param xy:
-    :param win:
-    :param d:  (Default value = 0)
+    :param xy: param win:
+    :param d: Default value = 0)
+    :param win: 
 
     """
     x, y = xy
@@ -284,7 +284,7 @@ def click_xy(xy, win, d=0):
 def run_profile(profile):
     """
 
-    :param profile:
+    :param profile: 
 
     """
     global root
@@ -423,9 +423,9 @@ def get_profiles():
 def get_profile_pos(name, sort, exact=False):
     """
 
-    :param name:
-    :param sort:
-    :param exact:  (Default value = False)
+    :param name: param sort:
+    :param exact: Default value = False)
+    :param sort: 
 
     """
     profiles = get_profiles()
@@ -446,7 +446,7 @@ def get_profile_pos(name, sort, exact=False):
 def get_idents(n_profile):
     """
 
-    :param n_profile:
+    :param n_profile: 
 
     """
     config = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\AppConfig.json"
@@ -471,8 +471,8 @@ def get_idents(n_profile):
 def get_tab(airport, PROFILE):
     """
 
-    :param airport:
-    :param PROFILE:
+    :param airport: param PROFILE:
+    :param PROFILE: 
 
     """
     idents = get_idents(get_profile_pos(PROFILE, sort=False))
@@ -491,7 +491,7 @@ def get_tab(airport, PROFILE):
 def get_atis(ident):
     """
 
-    :param ident:
+    :param ident: 
 
     """
     atis_type = "C"
@@ -556,7 +556,7 @@ def get_atis(ident):
 def char_position(letter):
     """
 
-    :param letter:
+    :param letter: 
 
     """
     if len(letter) == 0:
