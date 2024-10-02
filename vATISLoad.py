@@ -14,25 +14,29 @@ import uuid
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 
 if None in [
-    il.find_spec("pyautogui"),
-    il.find_spec("pyperclip"),
-    il.find_spec("pygetwindow"),
-    il.find_spec("win32api"),
-    il.find_spec("psutil"),
-    il.find_spec("requests"),
-    il.find_spec("pyscreeze"),
+        il.find_spec("pyautogui"),
+        il.find_spec("pyperclip"),
+        il.find_spec("pygetwindow"),
+        il.find_spec("win32api"),
+        il.find_spec("psutil"),
+        il.find_spec("requests"),
+        il.find_spec("pyscreeze"),
 ]:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyautogui"])
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyperclip"])
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pygetwindow"])
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pywinutils"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "pyautogui"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "pyperclip"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "pygetwindow"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "pywinutils"])
     subprocess.check_call([sys.executable, "-m", "pip", "install", "psutil"])
     subprocess.check_call([sys.executable, "-m", "pip", "install", "tkinter"])
     subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyscreeze"])
     subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "--upgrade", "Pillow"]
-    )
+        [sys.executable, "-m", "pip", "install", "pyscreeze"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "--upgrade", "Pillow"])
     os.system("cls")
 else:
     os.system("cls")
@@ -101,8 +105,8 @@ def add_profile(facility, airports):
         f_out.write(json.dumps(data, indent=4))
 
     messagebox.showinfo(
-        "Success", f"Profile '{facility}' with airports {', '.join(airports)} added."
-    )
+        "Success",
+        f"Profile '{facility}' with airports {', '.join(airports)} added.")
     return facility
 
 
@@ -125,7 +129,8 @@ def delete_profile(profile):
 
     if profile in data["facilities"]:
         del data["facilities"][profile]
-        messagebox.showinfo("Deleted", f"Profile '{profile}' deleted successfully.")
+        messagebox.showinfo("Deleted",
+                            f"Profile '{profile}' deleted successfully.")
     else:
         messagebox.showwarning("Not Found", f"Profile '{profile}' not found.")
 
@@ -177,9 +182,11 @@ def check_datis_profile(profile):
             comp = data["profiles"][i]["composites"][j]
             comp_ident = comp["identifier"][1:]
 
-            if len(comp["presets"]) == 0 or "D-ATIS" not in comp["presets"][0]["name"]:
+            if len(comp["presets"]
+                   ) == 0 or "D-ATIS" not in comp["presets"][0]["name"]:
                 if added_datis == 0:
-                    messagebox.showinfo("Information", "Creating D-ATIS presets...")
+                    messagebox.showinfo("Information",
+                                        "Creating D-ATIS presets...")
 
                 datis_preset = {}
                 if len(comp["presets"]) != 0:
@@ -198,14 +205,15 @@ def check_datis_profile(profile):
 
     if added_datis > 0:
         save_output = messagebox.askyesno(
-            "Save Presets", "Would you like to save the new D-ATIS presets?"
-        )
+            "Save Presets", "Would you like to save the new D-ATIS presets?")
         if save_output:
             with open(config, "w") as f_out:
                 f_out.write(json.dumps(data, indent=4))
-            messagebox.showinfo("Saved", "New D-ATIS presets saved successfully.")
+            messagebox.showinfo("Saved",
+                                "New D-ATIS presets saved successfully.")
         else:
-            messagebox.showinfo("Cancelled", "Preset additions were cancelled.")
+            messagebox.showinfo("Cancelled",
+                                "Preset additions were cancelled.")
     else:
         messagebox.showinfo("No Changes", "No new D-ATIS presets were added.")
 
@@ -220,9 +228,8 @@ def open_vATIS():
 
     # Wait for the vATIS window to appear
     for _ in range(10):
-        vatis_open = any(
-            "vATIS Profiles" in window.title for window in gw.getAllWindows()
-        )
+        vatis_open = any("vATIS Profiles" in window.title
+                         for window in gw.getAllWindows())
         if vatis_open:
             time.sleep(1)
             return
@@ -251,9 +258,8 @@ def center_win(exe_name, window_title):
 
     # Move the window to the center
     screen_dim = [win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1)]
-    win.moveTo(
-        int((screen_dim[0] - win.size[0]) / 2), int((screen_dim[1] - win.size[1]) / 2)
-    )
+    win.moveTo(int((screen_dim[0] - win.size[0]) / 2),
+               int((screen_dim[1] - win.size[1]) / 2))
 
     # Bring the window to the foreground
     hwnd = win._hWnd
@@ -302,8 +308,7 @@ def run_profile(profile):
         return
     elif n_profile > 18:
         messagebox.showerror(
-            "Error", "vATISLoad does not support more than 19 profiles."
-        )
+            "Error", "vATISLoad does not support more than 19 profiles.")
         return
     loc_profile = [90, 40 + 14 * n_profile]
 
@@ -320,7 +325,9 @@ def run_profile(profile):
         tab = get_tab(ident, profile)
         if tab == -1:
             parent.attributes("-topmost", True)
-            messagebox.showinfo("Not Found", f"{ident} NOT FOUND.", parent=parent)
+            messagebox.showinfo("Not Found",
+                                f"{ident} NOT FOUND.",
+                                parent=parent)
             continue
 
         loc_tab = [38.6 + 53.6 * tab, 64]
@@ -348,7 +355,9 @@ def run_profile(profile):
 
         if len(code) == 0 or len(atis[0]) == 0:
             parent.attributes("-topmost", True)
-            messagebox.showinfo("No Code", f"{ident.upper()} - UN", parent=parent)
+            messagebox.showinfo("No Code",
+                                f"{ident.upper()} - UN",
+                                parent=parent)
             continue
 
         click_xy([720, 330], win)
@@ -462,7 +471,8 @@ def get_idents(n_profile):
     idents = []
 
     for comp in data["profiles"][n_profile]["composites"]:
-        idents.append([comp["identifier"], comp["atisType"][0].replace("C", "Z")])
+        idents.append(
+            [comp["identifier"], comp["atisType"][0].replace("C", "Z")])
     idents.sort()
 
     return idents
@@ -518,19 +528,10 @@ def get_atis(ident):
         datis = re.sub(".*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ", "", datis)
         datis = ". ".join(datis.split(". ")[1:])
         datis = re.sub(" ...ADVS YOU HAVE.*", "", datis)
-        datis = (
-            datis.replace("...", "/./")
-            .replace("..", ".")
-            .replace("/./", "...")
-            .replace("  ", " ")
-            .replace(" . ", ". ")
-            .replace(", ,", ",")
-            .replace(" ; ", "; ")
-            .replace(" .,", " ,")
-            .replace(" , ", ", ")
-            .replace("., ", ", ")
-            .replace("&amp;", "&")
-        )
+        datis = (datis.replace("...", "/./").replace("..", ".").replace(
+            "/./", "...").replace("  ", " ").replace(" . ", ". ").replace(
+                ", ,", ",").replace(" ; ", "; ").replace(" .,", " ,").replace(
+                    " , ", ", ").replace("., ", ", ").replace("&amp;", "&"))
 
         info = []
         if "NOTAMS" in datis:
@@ -548,7 +549,8 @@ def get_atis(ident):
             elif atis_type == "D":
                 atis_info[0] = re.sub(r"\s+", " ", info[0])
             else:
-                atis_info[0] = re.sub(r"\s+", " ", info[0] + " " + atis_info[0])
+                atis_info[0] = re.sub(r"\s+", " ",
+                                      info[0] + " " + atis_info[0])
 
     return atis_info, code
 
@@ -573,7 +575,8 @@ def add_profile_action():
     facility_entry = tk.Entry(add_window)
     facility_entry.grid(row=0, column=1)
 
-    tk.Label(add_window, text="Airports (comma separated):").grid(row=1, column=0)
+    tk.Label(add_window, text="Airports (comma separated):").grid(row=1,
+                                                                  column=0)
     airports_entry = tk.Entry(add_window)
     airports_entry.grid(row=1, column=1)
 
@@ -588,9 +591,9 @@ def add_profile_action():
         else:
             messagebox.showwarning("Input Error", "Please fill both fields.")
 
-    tk.Button(add_window, text="Save", command=save_profile).grid(
-        row=2, column=0, columnspan=2
-    )
+    tk.Button(add_window, text="Save", command=save_profile).grid(row=2,
+                                                                  column=0,
+                                                                  columnspan=2)
 
 
 def delete_profile_window():
@@ -598,9 +601,10 @@ def delete_profile_window():
     delete_window = tk.Toplevel(root)
     delete_window.title("Select Profile to Delete")
 
-    tk.Label(delete_window, text="Select a Profile to Delete:").grid(
-        row=0, column=0, padx=10, pady=10
-    )
+    tk.Label(delete_window, text="Select a Profile to Delete:").grid(row=0,
+                                                                     column=0,
+                                                                     padx=10,
+                                                                     pady=10)
 
     delete_profile_listbox = Listbox(delete_window, height=10, width=50)
     delete_profile_listbox.grid(row=1, column=0, padx=10, pady=10)
@@ -614,9 +618,9 @@ def delete_profile_window():
         """ """
         selected_profile = delete_profile_listbox.get(tk.ACTIVE)
         if not selected_profile:
-            messagebox.showwarning(
-                "Selection Error", "Please select a profile to delete.", delete_window
-            )
+            messagebox.showwarning("Selection Error",
+                                   "Please select a profile to delete.",
+                                   delete_window)
             return
 
         # Confirm deletion
@@ -628,9 +632,11 @@ def delete_profile_window():
             return
 
         # Load the existing vATISLoadConfig.json
-        config_path = os.getenv("LOCALAPPDATA") + "\\vATIS-4.0\\vATISLoadConfig.json"
+        config_path = os.getenv(
+            "LOCALAPPDATA") + "\\vATIS-4.0\\vATISLoadConfig.json"
         if not os.path.isfile(config_path):
-            config_path = os.getenv("LOCALAPPDATA") + "\\vATIS\\vATISLoadConfig.json"
+            config_path = os.getenv(
+                "LOCALAPPDATA") + "\\vATIS\\vATISLoadConfig.json"
 
         with open(config_path, "r") as f:
             data = json.load(f)
@@ -652,15 +658,14 @@ def delete_profile_window():
             json.dump(data, f_out, indent=4)
 
         messagebox.showinfo(
-            "Success", f"Profile '{selected_profile}' deleted successfully!"
-        )
+            "Success", f"Profile '{selected_profile}' deleted successfully!")
         delete_window.destroy()  # Close the window after deletion
         refresh_profiles()
 
     # Add a button to delete the selected profile
-    delete_button = tk.Button(
-        delete_window, text="Delete", command=delete_selected_profile
-    )
+    delete_button = tk.Button(delete_window,
+                              text="Delete",
+                              command=delete_selected_profile)
     delete_button.grid(row=2, column=0, padx=10, pady=10)
 
 
@@ -684,7 +689,8 @@ def create_ui():
     menubar.add_cascade(label="File", menu=file_menu)
 
     file_menu.add_command(label="Add Profile", command=add_profile_action)
-    file_menu.add_command(label="Delete Profile", command=delete_profile_window)
+    file_menu.add_command(label="Delete Profile",
+                          command=delete_profile_window)
     file_menu.add_separator()
     file_menu.add_command(label="Help", command=open_help)
 
@@ -692,9 +698,8 @@ def create_ui():
     tk.Label(root, text="Profiles").grid(row=0, column=0)
     profile_listbox = Listbox(root, height=10, width=50)
     profile_listbox.grid(row=1, column=0, padx=10, pady=10)
-    profile_listbox.bind(
-        "<Double-Button-1>", on_profile_double_click
-    )  # Bind double-click
+    profile_listbox.bind("<Double-Button-1>",
+                         on_profile_double_click)  # Bind double-click
 
     # Refresh the profile listbox
     refresh_profiles()
