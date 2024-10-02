@@ -1,18 +1,16 @@
 #####################################################################
 ########################### vATISLoad.py ############################
 #####################################################################
-import subprocess
-import sys
-import os
-import time
-import json
-import re
-import uuid
 import ctypes
-
-
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import uuid
 
 if None in [
     il.find_spec("pyautogui"),
@@ -38,15 +36,16 @@ if None in [
 else:
     os.system("cls")
 
-import requests
-import pyautogui
-import psutil
-import pyperclip
-import pygetwindow as gw
 import tkinter as tk
-from win32 import win32api, win32gui, win32gui, win32process
-from tkinter import messagebox, Listbox, Menu
 import webbrowser
+from tkinter import Listbox, Menu, messagebox
+
+import psutil
+import pyautogui
+import pygetwindow as gw
+import pyperclip
+import requests
+from win32 import win32api, win32gui, win32process
 
 scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 
