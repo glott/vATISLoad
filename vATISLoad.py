@@ -2,7 +2,6 @@
 ########################### vATISLoad.py ############################
 #####################################################################
 import ctypes
-# pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
 import json
 import os
@@ -11,6 +10,7 @@ import subprocess
 import sys
 import time
 import uuid
+# pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 
 if None in [
     il.find_spec("pyautogui"),
