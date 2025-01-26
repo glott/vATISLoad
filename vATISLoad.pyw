@@ -1,14 +1,16 @@
 #####################################################################
 ########################### vATISLoad.py ############################
 #####################################################################
-import subprocess, sys, os, time, json, re, uuid, ctypes
+import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
+from datetime import datetime
 
 # pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
 if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
             il.find_spec('pygetwindow'), il.find_spec('win32api'), \
             il.find_spec('psutil'), il.find_spec('requests'), \
-            il.find_spec('pyscreeze')]:
+            il.find_spec('pyscreeze'), il.find_spec('websockets'), \
+            il.find_spec('pynput')]:
     subprocess.check_call([sys.executable, '-m', 'pip', 
                        'install', 'pyautogui']);
     subprocess.check_call([sys.executable, '-m', 'pip', 
@@ -24,221 +26,272 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     subprocess.check_call([sys.executable, '-m', 'pip', 
                            'install', 'pyscreeze']);
     subprocess.check_call([sys.executable, '-m', 'pip', 
+                           'install', 'websockets']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 
+                           'install', 'pynput']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 
                            'install', '--upgrade', 'Pillow']);
     os.system('cls')
 else:
     os.system('cls')
     
 import requests, pyautogui, psutil, pyperclip, pygetwindow as gw
+import websockets, pynput
 from win32 import win32api, win32gui, win32gui, win32process
 from win32.lib import win32con
 
 scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 
-def read_config():
-    profiles = {}
-    timeout = 2
-    config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\vATISLoadConfig.json'
-    if not os.path.isfile(config):
-        config = os.getenv('LOCALAPPDATA') + '\\vATIS\\vATISLoadConfig.json'
-        if not os.path.isfile(config):
-            return profiles, timeout
-        
-    f = open(config, 'r')
-    data = json.loads(f.read())
-    f.close()
-    
-    return data['facilities'], data['timeout']
+tab_sizes = {'small': 70, 'large': 95, 'small_con': 90, 'large_con': 118}
 
-def check_datis_profile(profile):
-    config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
-    if not os.path.isfile(config):
-        config = os.getenv('LOCALAPPDATA') + '\\vATIS\\AppConfig.json'
+def set_foreground_window(hwnd):
+    pyautogui.FAILSAFE = False
+    pyautogui.press('alt')
+    win32gui.SetForegroundWindow(hwnd)
 
-    f = open(config, 'r')
-    data = json.loads(f.read())
-    f.close()
-    
-    added_datis = 0
-    for i in range(0, len(data['profiles'])):
-        if not profile in data['profiles'][i]['name']:
-            continue
-        
-        for j in range(0, len(data['profiles'][i]['composites'])):
-            comp = data['profiles'][i]['composites'][j]
-            comp_ident = comp['identifier'][1:]
-            
-            if len(comp['presets']) == 0 or \
-                'D-ATIS' not in comp['presets'][0]['name']:
-                if added_datis == 0:
-                    print('=========== vATISLoad ===========')
-                
-                datis_preset = {}
-                if len(comp['presets']) != 0:
-                    comp['presets'].insert(0, comp['presets'][0].copy())
-                    datis_preset = comp['presets'][0]
-                else:
-                    comp['presets'].insert(0, datis_preset)
-                datis_preset['id'] = str(uuid.uuid4())
-                datis_preset['name'] = 'D-ATIS'
-                datis_preset['airportConditions'] = ''
-                datis_preset['notams'] = ''
-                datis_preset['externalGenerator'] = {'enabled': False}
-                print(f'Created D-ATIS preset for {comp_ident}')
-                added_datis += 1
-                
-        if added_datis > 0:
-            print('\nPress ENTER to save D-ATIS preset additions')
-            save_output = input('Input any other text to cancel')
-        
-            if len(save_output) == 0:
-                with open(config, 'w+') as f_out:
-                    f_out.write(json.dumps(data, indent=4))
-                    print('Saved new D-ATIS presets')
-                    time.sleep(0.5)
-                    os.system('cls')
+def determine_active_profile():
+    crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
+    crc_name = ''
+    crc_data = {}
+    crc_lastused_time = '2020-01-01T08:00:00'
+    for filename in os.listdir(crc_profiles):
+        if filename.endswith('.json'): 
+            file_path = os.path.join(crc_profiles, filename)
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
+                dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
+                if dt2 > dt1:
+                    crc_lastused_time = data['LastUsedAt'].split('.')[0]
+                    crc_name = data['Name']
+                    crc_data = data
+
+    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
+    for filename in os.listdir(vatis_profiles):
+        if filename.endswith('.json'): 
+            file_path = os.path.join(vatis_profiles, filename)
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                vatis_abr = data['name'].split('(')[1][0:3]
+                if vatis_abr in crc_name:
+                    return data['name']
+
+    config = {}
+    facility_id = ''
+    try:
+        url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoadConfig.json'
+        config = json.loads(requests.get(url).text)
+        facility_id = crc_data['DisplayWindowSettings'][0]['DisplaySettings'][0]['FacilityId']
+    except Exception as ignored:
+        pass
+
+    if 'facility-patches' in config and facility_id in config['facility-patches']:
+        patch = config['facility-patches'][facility_id]
+
+        for filename in os.listdir(vatis_profiles):
+            if filename.endswith('.json'): 
+                file_path = os.path.join(vatis_profiles, filename)
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    vatis_abr = data['name'].split('(')[1][0:3]
+                    if vatis_abr in patch:
+                        return data['name']
+    return ''
+
+def get_active_profile_position(profile):
+    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
+    profile_names = []
+    for filename in os.listdir(vatis_profiles):
+        if filename.endswith('.json'): 
+            file_path = os.path.join(vatis_profiles, filename)
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                profile_names.append(data['name'])
+
+    if profile in profile_names:
+        return profile_names.index(profile)
+    return -1
 
 def open_vATIS():
     os.system('taskkill /f /im vATIS.exe 2>nul 1>nul')
-    exe = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\Application\\vATIS.exe'
-    if not os.path.isfile(exe):
-        exe = os.getenv('LOCALAPPDATA') + '\\vATIS\\Application\\vATIS.exe'
+    exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
     subprocess.Popen(exe);
     
-    for i in range(0, 10): 
-        vatis_open = False
+    for i in range(0, 50): 
         for window in gw.getAllWindows():
             if 'vATIS Profiles' in window.title:
-                vatis_open = True
-        if vatis_open:
-            time.sleep(1.0)
-            return
-        else:
-            time.sleep(0.5)
+                set_foreground_window(window._hWnd)
+                
+                t0 = time.time()
+                atis_data = get_all_datises()
+                dt = time.time() - t0
+                if dt < 0.5:
+                    time.sleep(0.5 - dt)
+                return atis_data
+            else:
+                time.sleep(0.1)
+    return []
 
-def center_win(exe_name, window_title):
-    win = None
-
-    # Select window
+def get_win(exe_name, window_title):
     for window in gw.getAllWindows():
-        hwnd = window._hWnd
-        thread_id, process_id = win32process.GetWindowThreadProcessId(hwnd)
+        thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
         process = psutil.Process(process_id)
         process_name = process.name()
         process_path = process.exe()
         if exe_name in process_path:
             if window.title == window_title:
-                win = window
-    
-    # Move window to center
-    screen_dim = [win32api.GetSystemMetrics(0), \
-                  win32api.GetSystemMetrics(1)]
-    win.moveTo(int((screen_dim[0] - win.size[0]) / 2), \
-                  int((screen_dim[1] - win.size[1]) / 2))
-    
-    # Move window to foreground
-    hwnd = win._hWnd
-    pyautogui.FAILSAFE = False
-    pyautogui.press('alt')
-    win32gui.SetForegroundWindow(hwnd)
-    
-    return win
+                return window
 
-def click_xy(xy, win, d=0):
+def click_xy(xy, win, sf=False, d=0.01):
     x, y = xy
-    x *= scale_factor
-    y *= scale_factor
+    if sf:
+        x *= scale_factor
+        y *= scale_factor
     x += win.left
     y += win.top
     time.sleep(d)
     pyautogui.moveTo(x, y)
     pyautogui.click()
+
+async def get_online_atises():
+    # url = "https://data.vatsim.net/v3/vatsim-data.json"
+    # response = requests.get(url)
+    # data = response.json()
+
+    # vat_atises = []
+    # for atis in data['atis']:
+    #     vat_atises.append(atis['callsign'].replace('_ATIS', ''))
     
-def get_profiles():
-    config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
-    if not os.path.isfile(config):
-        config = os.getenv('LOCALAPPDATA') + '\\vATIS\\AppConfig.json'
+    online_atises = {}
+    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.05) as websocket:
+        for i in range(0, 20):
+            await websocket.send(json.dumps({'type': 'getAtis'}))
+            m = json.loads(await websocket.recv())['value']
+            if m['atisType'] == 'Arrival':
+                m['station'] += '_A'
+            elif m['atisType'] == 'Departure':
+                m['station'] += '_D'
 
-    f = open(config, 'r')
-    data = json.loads(f.read())
-    f.close()
+            if m['networkConnectionStatus'] != 'Disconnected' and m['station'] not in online_atises:
+                online_atises[m['station']] = m['networkConnectionStatus']
+            # elif m['networkConnectionStatus'] == 'Disconnected' and m['station'] in vat_atises:
+            #     online_atises[m['station']] = 'Connected'
     
-    profiles = []
-    for profile in data['profiles']:
-        profiles.append(profile['name'])
+    return online_atises
+
+def read_profile(profile):
+    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
+    for filename in os.listdir(vatis_profiles):
+        if filename.endswith('.json'): 
+            file_path = os.path.join(vatis_profiles, filename)
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                if data['name'] == profile:
+                    return data
+
+def get_stations(data):
+    stations = []
+    for station in data['stations']:
+        s = station['identifier']
+        if station['atisType'] == 'Departure':
+            s += '_D'
+        elif station['atisType'] == 'Arrival':
+            s += '_A'
+        stations.append(s)
+
+    return stations
+
+def get_contractions(station, data):
+    c = {}
+    station_data = {}
+    for s in data['stations']:
+        if station[0:4] in s['identifier']:
+            if len(station) == 4:
+                station_data = s
+                break
+            elif (station[5] == 'D' and s['atisType'] == 'Departure') or \
+                (station[5] == 'A' and s['atisType'] == 'Arrival'):
+                station_data = s
+    contractions = station_data['contractions']
+    for cont in contractions:
+        c[cont['text']] = '@' + cont['variableName']
+    c = dict(sorted(c.items(), key=lambda item: len(item[0])))
+    c = {key: c[key] for key in reversed(c)}
+
+    return c
+
+async def get_station_position(station, stations):
+    online_atises = []
+    offline_atises = list(stations)
+
+    for s, v in (await get_online_atises()).items():
+        if v == 'Observer':
+            online_atises.append(s + '*')
+        else:
+            online_atises.append(s)
+            
+        if s in offline_atises:
+                offline_atises.remove(s)
+
+    online_atises = sorted([item.replace('_A', '_Z') if '_A' in item else item for item in online_atises])
+    online_atises = [item.replace('_Z', '_A') if '_Z' in item else item for item in online_atises]
+    offline_atises = sorted([item.replace('_A', '_Z') if '_A' in item else item for item in offline_atises])
+    offline_atises = [item.replace('_Z', '_A') if '_Z' in item else item for item in offline_atises]
+
+    left_pad = 20
+    for atis in online_atises:
+        if station in atis:
+            if '*' not in atis:
+                return -1
+            if '_' in atis:
+                left_pad += tab_sizes['large_con'] / 2
+            else:
+                left_pad += tab_sizes['small_con'] / 2
+            return left_pad
+        else:
+            if '_' in atis:
+                left_pad += tab_sizes['large_con']
+            else:
+                left_pad += tab_sizes['small_con']
+
+    for atis in offline_atises:
+        if station in atis:
+            if '_' in atis:
+                left_pad += tab_sizes['large'] / 2
+            else:
+                left_pad += tab_sizes['small'] / 2
+            return left_pad
+        else:
+            if '_' in atis:
+                left_pad += tab_sizes['large']
+            else:
+                left_pad += tab_sizes['small']
     
-    return profiles
+    return left_pad
 
-def get_profile_pos(name, sort, exact=False):
-    profiles = get_profiles()
-    if sort:
-        profiles.sort()
-        for i in range(0, len(profiles)):
-            profiles[i] = re.sub(r'[^A-z0-9 ]', '', profiles[i])
-    for i in range(0, len(profiles)):
-        prof = profiles[i]
-        if re.sub(r'[^A-z0-9 ]', '', name) in prof and not exact:
-            return i
-        elif name == prof:
-            return i
+def get_all_datises():
+    url = 'https://datis.clowd.io/api/all'
+    return json.loads(requests.get(url).text)
 
-    return -1
+def get_datis(ident, atis_data, data):
+    atis_type = 'combined'
+    if '_A' in ident:
+        atis_type = 'arr'
+    elif '_D' in ident:
+        atis_type = 'dep'
+    ident = ident.split('_')[0]
 
-def get_idents(n_profile):
-    config = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0\\AppConfig.json'
-
-    if not os.path.isfile(config):
-        config = os.getenv('LOCALAPPDATA') + '\\vATIS\\AppConfig.json'
-
-    f = open(config, 'r')
-    data = json.loads(f.read())
-    f.close()
-
-    prof_name = data['profiles'][n_profile]['name']
-    idents = []
-
-    for comp in data['profiles'][n_profile]['composites']:
-        idents.append([comp['identifier'], 
-                       comp['atisType'][0].replace('C', 'Z')])
-    idents.sort()
-    
-    return idents
-
-def get_tab(airport, PROFILE):
-    idents = get_idents(get_profile_pos(PROFILE, sort=False))
-    for i in range(0, len(idents)):
-        ident = idents[i]
-        if '/' in airport:
-            apt, atis_type = airport.split('/')
-            if apt in ident[0]:
-                if atis_type[0] != ident[1][0]:
-                    return i
-        elif airport in ident[0] and ident[1] == 'Z':
-            return i
-    return -1
-
-def get_atis(ident):
-    atis_type = 'C'
-    if '/' in ident:
-        ident, atis_type = ident.split('/')
-    if len(ident) == 3:
-        ident = 'K' + ident
-    url = 'https://datis.clowd.io/api/' + ident
-
-    atis_info, code = [], ''
-    atis_data = json.loads(requests.get(url).text)
+    atis_info = []
     if 'error' in atis_data:
-        return [], ''
+        return atis_info
     
     for n in range(0, len(atis_data)):
+        if atis_data[n]['airport'] != ident[0:4]:
+            continue
+        if atis_data[n]['type'] != atis_type:
+            continue
+        
         datis = atis_data[n]['datis']
-        if atis_type == 'C' and n == 0:
-            code = atis_data[n]['code']
-        elif atis_type == 'D' and atis_data[n]['type'] == 'dep':
-            code = atis_data[n]['code']
-        elif atis_type == 'A' and atis_data[n]['type'] == 'arr':
-            code = atis_data[n]['code']
-
         datis = re.sub('.*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ', '', datis)
         datis = '. '.join(datis.split('. ')[1:])
         datis = re.sub(' ...ADVS YOU HAVE.*', '', datis)
@@ -246,232 +299,149 @@ def get_atis(ident):
             .replace('/./', '...').replace('  ', ' ').replace(' . ', '. ') \
             .replace(', ,', ',').replace(' ; ', '; ').replace(' .,', ' ,') \
             .replace(' , ', ', ').replace('., ', ', ').replace('&amp;', '&')
+        datis = datis.replace('NOTICE TO AIR MISSIONS, NOTAMS. ', 'NOTAMS... ') \
+            .replace('NOTICE TO AIR MISSIONS. ', 'NOTAMS... ')
 
-        info = []
+        contractions = get_contractions(ident, data)
+        for c, v in contractions.items():
+            if not c.isdigit():
+                datis = datis.replace(c + ',', v + ',').replace(c + '.', v + '.') \
+                .replace(c + ' ', v + ' ').replace(c + ';', v + ';')
+        
         if 'NOTAMS' in datis:
-            info = datis.split('NOTAMS... ')
-        elif 'NOTICE TO AIR MISSIONS. ' in datis:
-            info = datis.split('NOTICE TO AIR MISSIONS. ')
+            atis_info = datis.split('NOTAMS... ')
         else:
-            info = [datis, '']
-        
-        if n == 0:
-            atis_info = info[:]
-        else:
-            if atis_type == 'A':
-                atis_info[0] = re.sub(r'\s+', ' ', atis_info[0])
-            elif atis_type == 'D':
-                atis_info[0] = re.sub(r'\s+', ' ', info[0])
-            else:
-                atis_info[0] = re.sub(r'\s+', ' ', 
-                                      info[0] + ' ' + atis_info[0])
-
-    return atis_info, code
-
-def char_position(letter):
-    if len(letter) == 0:
-        return -1
-    return ord(letter.lower()) - 97
-
-def add_profile(facility, airports):
-    facility = facility.upper()
-    airports = re.sub('[^0-9A-z,/]', '', airports).upper().split(',')
-    if len(facility) == 0 or len(airports) == 0:
-        os.execv(sys.executable, ['python'] + sys.argv)
-        return
+            atis_info = [datis, '']
     
-    config_folder = os.getenv('LOCALAPPDATA') + '\\vATIS-4.0'
-    if not os.path.exists(config_folder):
-        config_folder = os.getenv('LOCALAPPDATA') + '\\vATIS'
-    if not os.path.exists(config_folder):
-        print('No vATIS folder found.')
-        return
+    return atis_info
+
+async def load_atis(station, stations, data, atis_data):
+    left_pad = await get_station_position(station, stations)
     
-    config = os.path.join(config_folder, 'vATISLoadConfig.json')
-    data = {}
-    if not os.path.isfile(config):
-        data['facilities'] = {}
-        data['timeout'] = 2
-    else:
-        f = open(config, 'r')
-        data = json.loads(f.read())
-        f.close()
-        
-    data['facilities'][facility] = airports
-        
-    with open(config, 'w+') as f_out:
-        f_out.write(json.dumps(data, indent=4))
+    if left_pad == -1:
+        return 0
     
-    os.system('cls')
-    subprocess.check_call([sys.executable, sys.argv[0]]);
+    station_data = {}
+    for elem in data['stations']:
+        if station[0:4] in elem['identifier']:
+            if len(station) == 4:
+                station_data = elem
+                break
+            elif (station[5] == 'D' and elem['atisType'] == 'Departure') or \
+                (station[5] == 'A' and elem['atisType'] == 'Arrival'):
+                station_data = elem
+                break
 
-# Center command prompt
-for win in gw.getAllWindows():
-    _, process_id = win32process.GetWindowThreadProcessId(win._hWnd)
-    process = psutil.Process(process_id)
-    if 'py.exe' in win.title or (win.title == 'vATIS' and 'vATIS.exe' not in process.exe()): 
-        screen_dim = [win32api.GetSystemMetrics(0), \
-            win32api.GetSystemMetrics(1)]
-        win.moveTo(int((screen_dim[0] - win.size[0]) / 2) - 60, \
-            int((screen_dim[1] - win.size[1]) / 2))
+    # Make sure profile has D-ATIS preset
+    if station_data['presets'][0]['name'] != 'D-ATIS':
+        return 0
 
-# Profile selection
-print('=========== vATISLoad ===========')
-profiles, TIMEOUT = read_config()
-for i in range(0, len(profiles)):
-    facility = list(profiles.keys())[i]
-    airports = ', '.join(list(profiles.values())[i])
-    print(f'({i}) {facility} - {airports}')
     
-if len(profiles) == 0:
-    print('No vATISLoadConfig.json file found!')
-    print('Add profiles to create a configuration file.\n')
+    # Select profile
+    click_xy([left_pad, 100], win)
+
+    # Select D-ATIS preset
+    click_xy([500, 500], win, d=0.1)
+    click_xy([500, 550], win, d=0.1)
+
+    atis = get_datis(station, atis_data, data)
+    if len(atis) == 0:
+        return 0
+    # Fill in AIRPORT CONDITIONS field
+    click_xy([335, 390], win)
+    pyautogui.hotkey('ctrl', 'a')
+    pyautogui.press('backspace')
+    pyperclip.copy(atis[0])
+    pyautogui.hotkey('ctrl', 'v')
+    click_xy([540, 295], win, d=0.1)
+
+    # Fill in NOTAMS field
+    click_xy([940, 390], win)
+    pyautogui.hotkey('ctrl', 'a')
+    pyautogui.press('backspace')
+    pyperclip.copy(atis[1])
+    pyautogui.hotkey('ctrl', 'v')
+    pyperclip.copy('')
+    click_xy([1145, 295], win, d=0.1)
+
+    pyautogui.hotkey('ctrl', 'd')
+
+    # This code likely won't work until there's a reliable way to check if something is online
+    # Select profile again and connect ATIS
     
-print('(A) Add new profile')
+    # click_xy([left_pad, 100], win, sf=False)
+    # with pyautogui.hold('shift'):
+    #     pyautogui.press('tab', presses=7)
+    # pyautogui.press('enter')
+    # time.sleep(1)
 
-for i in range(0, 100):
-    idx = input('\nProfile: ')
-    if idx.isdigit():
-        idx = int(idx)
-        if idx < len(profiles):
-            break
-    elif idx.upper() == 'A':
-        os.system('cls')
-        print('=========== vATISLoad ===========')
-        print('Input the vATIS facility name')
-        print('e.g. \'Oakland ARTCC (ZOA)\'')
-        print('e.g. \'ZOA\'')
-        facility = input('\nFacility: ')
-        os.system('cls')
-        print('=========== vATISLoad ===========')
-        print('Input airports separated by commas')
-        print('DEP/ARR ATISes - add \'/D\' or \'/A\'')
-        print('e.g. \'MIA/D, MIA/A, FLL, TPA, RSW\'')
-        airports = input('\nAirports: ')
-        add_profile(facility, airports)
-        profiles, TIMEOUT = read_config()
-        idx = len(profiles) - 1
-        break
-    print(f'Invalid input! Selection must be a number ' \
-          + f'between 0 and {len(profiles) - 1}.')
+    print(f'{station} is now loaded.')
+    time.sleep(0.05)
+    
+    return 0
 
-os.system('cls')
-PROFILE = list(profiles.keys())[idx]
-AIRPORTS = list(profiles.values())[idx]
-
-# Create missing D-ATIS presets
-check_datis_profile(PROFILE)
-
-print('=========== vATISLoad ===========')
-print(f'[{PROFILE}]')
-
-# Open vATIS
-open_vATIS()
-pyautogui.PAUSE = 0.001
-
-# Center 'vATIS Profiles' window and bring to foreground
-win = center_win('vATIS.exe', 'vATIS Profiles')
-
-# Select profile chosen above
-win_bound = [win.left, win.top]
-n_profile = get_profile_pos(PROFILE, sort=True)
-if n_profile == -1:
-    print('Selected profile not found!')
-    print('Ensure facility name is unique/exists\n')
-    print('Rename profile in \'vATISLoadConfig.json\'')
-    print('See the README on GitHub for more info')
+active_profile = determine_active_profile()
+if len(active_profile) == 0:
+    print('Active profile not found.')
     time.sleep(10)
     sys.exit()
-elif n_profile > 18:
-    print('You must have <= 19 vATIS profiles')
-    print('vATISLoad does not support > 19 currently')
-    time.sleep(10)
-    sys.exit()
-loc_profile = [90, 40 + 14 * n_profile]
 
-click_xy(loc_profile, win)
+# Open vATIS and select first profile
+atis_data = open_vATIS()
+pyautogui.PAUSE = 0.0001
+win = get_win('vATIS.exe', 'vATIS Profiles')
+click_xy([0, 0], win)
+pyautogui.press('tab')
+
+# Select active profile
+for i in range(0, get_active_profile_position(active_profile)):
+    pyautogui.press('down')
+pyautogui.press('enter')
+with pyautogui.hold('shift'):
+    pyautogui.press('tab', presses=5)
 pyautogui.press('enter')
 
-time.sleep(1)
+data = read_profile(active_profile)
+stations = get_stations(data)
 
-# Center 'vATIS' window and bring to foreground
-win = center_win('vATIS.exe', 'vATIS')
+# Bring window to front
+for i in range(0, 50):
+    try:
+        win = get_win('vATIS.exe', 'vATIS')
+        set_foreground_window(win._hWnd)
+    except Exception as ignored:
+        time.sleep(0.1)
+        pass
 
-for ident in AIRPORTS:
-    # Select tab for specified airport
-    tab = get_tab(ident, PROFILE)
-    if tab == -1:
-        print(f'{ident} NOT FOUND.')
-        continue
-    loc_tab = [38.6 + 53.6 * tab, 64]
-    click_xy(loc_tab, win)
-    
-    # Select first preset
-    click_xy([400, 330], win)
-    pyautogui.press(['up', 'enter'])
-    
-    # Get D-ATIS
-    atis, code = get_atis(ident)
-    
-    # Enter ARPT COND
-    if len(atis) > 0:
-        click_xy([200, 250], win)
-        pyautogui.hotkey('ctrl', 'a')
-        pyautogui.press('backspace')
-        pyperclip.copy(atis[0])
-        pyautogui.hotkey('ctrl', 'v')
-        click_xy([40, 295], win)
-    
-    # Enter NOTAMS
-    if len(atis) > 1:
-        click_xy([600, 250], win)
-        pyautogui.hotkey('ctrl', 'a')
-        pyautogui.press('backspace')
-        pyperclip.copy(atis[1])
-        pyautogui.hotkey('ctrl', 'v')
-        click_xy([415, 295], win)
-        
-    if len(code) == 0 or len(atis[0]) == 0:
-        print(f'{ident.upper()} - UN')
-        continue
-    
-    # Connect ATIS
-    click_xy([720, 330], win)
-    state = ''
-    for i in range(0, int(10 * TIMEOUT)):
-        pix_x = int(scale_factor * 118)
-        pix_y = int(scale_factor * 104)
-        pix = pyautogui.pixel(win.left + pix_x, win.top + pix_y)
-        # Check if METAR loads (white 'K')
-        if pix[0] >= 248 or pix[1] >= 248:
-            state = 'CON'
-            break
-        # Check if ATIS is already connected (red 'N')
-        elif pix[0] >= 220 and pix[0] <= 230:
-            state = 'ON'
-            break
-        time.sleep(.1)
-    # Set ATIS code
-    for i in range(0, char_position(code)):
-        click_xy([62, 130], win)
-    if state == 'CON':
-        print(f'{ident.upper()} - {code}')
-    elif state == 'ON':
-        print(f'{ident.upper()} - OL/{code}')
-    else:
-        if len(code) > 0:
-            print(f'{ident.upper()} - UN/{code}')
-        else:  
-            print(f'{ident.upper()} - UN')
+time.sleep(1.0)
+i = 0
+# Load ATIS information
+for station in stations:
+    if i > 3: 
+        break
 
-pyperclip.copy('')
-time.sleep(3)
-win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
+    # Surpress mouse movements
+    mouse_listener = pynput.mouse.Listener()
+    def on_move(x,y):
+        mouse_listener.suppress_event()
+    mouse_listener.on_move = on_move
+    mouse_listener.start()
+
+    # Comment as needed for Jupyter or desktop
+    # i += await load_atis(station, stations, data, atis_data)
+    i += asyncio.run(load_atis(station, stations, data, atis_data))
+    
+    mouse_listener.stop()
+    
+
+# Restore these items in the future
+# time.sleep(3)
+# win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
 
 # Determine mouse position (and color) on held left click
 def mouse_position(color=False):
     prev_xy = [-99999, -99999]
-    for i in range(0, 1000):
+    for i in range(0, 20):
         time.sleep(1)
         if win32api.GetAsyncKeyState(0x01) >= 0:
             continue
@@ -485,4 +455,5 @@ def mouse_position(color=False):
                 print(out, pyautogui.pixel(x, y))
             prev_xy = out[:]
             
+# win = get_win('vATIS.exe', 'vATIS')          
 # mouse_position()
