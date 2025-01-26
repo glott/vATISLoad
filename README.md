@@ -6,7 +6,7 @@ _by Josh Glottmann_
 
 Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.app/) by [Justin Shannon](https://github.com/JustinShannon)
 
-__[Download v1.3.0](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.py)__ 
+__[Download v1.3.0](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.pyw)__ 
 
 ### Usage
 
