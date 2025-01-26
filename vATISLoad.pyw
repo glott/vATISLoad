@@ -72,6 +72,8 @@ def determine_active_profile():
             file_path = os.path.join(vatis_profiles, filename)
             with open(file_path, 'r') as f:
                 data = json.load(f)
+                if not '(' in  data['name']:
+                    continue
                 vatis_abr = data['name'].split('(')[1][0:3]
                 if vatis_abr in crc_name:
                     return data['name']
@@ -93,6 +95,8 @@ def determine_active_profile():
                 file_path = os.path.join(vatis_profiles, filename)
                 with open(file_path, 'r') as f:
                     data = json.load(f)
+                    if not '(' in  data['name']:
+                        continue
                     vatis_abr = data['name'].split('(')[1][0:3]
                     if vatis_abr in patch:
                         return data['name']
