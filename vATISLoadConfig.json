@@ -1,22 +1,16 @@
 {
     "facility-patches":
     {
-        "ZMA":
-        [
-            "MIA",
-            "TPA",
-            "FLL",
-            "PBI",
-            "RSW"
-        ],
-        "ZOA":
-        [
-            "NCT",
-            "SFO",
-            "OAK",
-            "SJC",
-            "SMF",
-            "RNO"
-        ]
+        "MIA": "ZMA",
+        "TPA": "ZMA",
+        "FLL": "ZMA",
+        "PBI": "ZMA",
+        "RSW": "ZMA",
+        "NCT": "ZOA",
+        "SFO": "ZOA",
+        "OAK": "ZOA",
+        "SJC": "ZOA",
+        "SMF": "ZOA",
+        "RNO": "ZOA"
     }
 }
