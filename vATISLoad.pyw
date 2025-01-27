@@ -33,7 +33,7 @@ scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 tab_sizes = {'small': 70, 'large': 95, 'small_con': 90, 'large_con': 118}
 
 # Set to False for testing
-RUN_UPDATE = False
+RUN_UPDATE = True
 
 def update_vATISLoad():
     online_file = ''
