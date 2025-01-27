@@ -435,16 +435,26 @@ if len(active_profile) == 0:
 atis_data = open_vATIS()
 pyautogui.PAUSE = 0.0001
 win = get_win('vATIS.exe', 'vATIS Profiles')
-click_xy([0, 0], win)
-pyautogui.press('tab')
+if True:
+    # Suppress mouse movements
+    mouse_listener = pynput.mouse.Listener()
+    def on_move(x,y):
+        mouse_listener.suppress_event()
+    mouse_listener.on_move = on_move
+    mouse_listener.start()
+    
+    click_xy([0, 0], win)
+    pyautogui.press('tab')
 
-# Select active profile
-for i in range(0, get_active_profile_position(active_profile)):
-    pyautogui.press('down')
-pyautogui.press('enter')
-with pyautogui.hold('shift'):
-    pyautogui.press('tab', presses=5)
-pyautogui.press('enter')
+    # Select active profile
+    for i in range(0, get_active_profile_position(active_profile)):
+        pyautogui.press('down')
+    pyautogui.press('enter')
+    with pyautogui.hold('shift'):
+        pyautogui.press('tab', presses=5)
+    pyautogui.press('enter')
+    
+    mouse_listener.stop()
 
 data = read_profile(active_profile)
 stations = get_stations(data)
@@ -465,7 +475,7 @@ for station in stations:
     if i > 3: 
         break
 
-    # Surpress mouse movements
+    # Suppress mouse movements
     mouse_listener = pynput.mouse.Listener()
     def on_move(x,y):
         mouse_listener.suppress_event()
@@ -481,23 +491,3 @@ for station in stations:
 # Restore these items in the future
 # time.sleep(3)
 # win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
-
-# Determine mouse position (and color) on held left click
-def mouse_position(color=False):
-    prev_xy = [-99999, -99999]
-    for i in range(0, 20):
-        time.sleep(1)
-        if win32api.GetAsyncKeyState(0x01) >= 0:
-            continue
-        x, y = pyautogui.position()
-        win_bound = [win.left, win.top]
-        out = x - win_bound[0], y - win_bound[1]
-        if out[0] != prev_xy[0] or out[1] != prev_xy[1]:
-            if not color:
-                print(out)
-            else:
-                print(out, pyautogui.pixel(x, y))
-            prev_xy = out[:]
-            
-# win = get_win('vATIS.exe', 'vATIS')          
-# mouse_position()
