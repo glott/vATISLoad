@@ -11,32 +11,21 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
             il.find_spec('psutil'), il.find_spec('requests'), \
             il.find_spec('pyscreeze'), il.find_spec('websockets'), \
             il.find_spec('pynput')]:
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                       'install', 'pyautogui']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'pyperclip']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'pygetwindow']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'pywinutils']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'psutil']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'requests']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'pyscreeze']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'websockets']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', 'pynput']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 
-                           'install', '--upgrade', 'Pillow']);
-    os.system('cls')
-else:
-    os.system('cls')
-    
-import requests, pyautogui, psutil, pyperclip, pygetwindow as gw
-import websockets, pynput
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyautogui']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyperclip']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywinutils']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywin32']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyscreeze']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'websockets']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pynput']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'Pillow']);
+os.system('cls')
+
+import pyautogui, pyperclip, pygetwindow, psutil, requests, websockets, pynput
 from win32 import win32api, win32gui, win32gui, win32process
 from win32.lib import win32con
 
@@ -129,7 +118,7 @@ def open_vATIS():
     subprocess.Popen(exe);
     
     for i in range(0, 50): 
-        for window in gw.getAllWindows():
+        for window in pygetwindow.getAllWindows():
             if 'vATIS Profiles' in window.title:
                 set_foreground_window(window._hWnd)
                 
@@ -144,7 +133,7 @@ def open_vATIS():
     return []
 
 def get_win(exe_name, window_title):
-    for window in gw.getAllWindows():
+    for window in pygetwindow.getAllWindows():
         thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
         process = psutil.Process(process_id)
         process_name = process.name()
