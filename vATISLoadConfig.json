@@ -42,11 +42,34 @@
             "TWR FREQ IS 118.3, CD FREQ 121.8.": "",
             "TWR, GROUND, CLEARANCE ON 118.3.": "",
             "TWR, GROUND, CLEARANCE ON 118.3, CD FREQ 121.8.": "",
-            "UAS ACTIVITY REPORTED, 5 MILES E OF MIA 1800 FT.": "",
-            "UAS ACTIVITY REPORTED, 7 MILES W OF MIA TWO THOUSAND SIX HUNDRED.": "",
-            "UNAUTHORIZED LASER ILLUMINATION AT 0010 ZULU, 5 MILES SOUTH OF, MIA, AT 7 THOUSAND FEET GREEN IN COLOR.": "",
-            "UNAUTHORIZED LASER ILLUMINATION AT 2330 ZULU, 30 MILES SOUTHEAST OF, MIA, GREEN IN COLOR.": "",
+            "UAS ACTIVITY REPORTED, \\d{1,2} MILES \\w{1,} OF MIA \\d{1,4} FT.": "%r",
+            "UAS ACTIVITY REPORTED, \\d{1,2} MILES \\w{1,} OF MIA \\w{3,} THOUSAND \\w{3,} HUNDRED.": "%r",
+            "UNAUTHORIZED LASER ILLUMINATION AT \\d{4} ZULU, \\d{1,2} MILES \\w{3,} OF, MIA, AT \\d{1,4} THOUSAND FEET \\w{3,} IN COLOR.": "%r",
+            "UNAUTHORIZED LASER ILLUMINATION AT \\d{4} ZULU, \\d{1,2} \\w{3,} OF, MIA, \\w{3,} IN COLOR.": "%r",
             "VKZ VOR OTS.": ""
+        },
+        "KFLL":
+        {
+            "\\d+ / \\d+ / \\d+ AT \\d{4} ZULU.": "%r",
+            "\\d+ / \\d+ / \\d+ AT \\d{4} ZULU, RUNWAY \\d\\d[LR] CONDITION CODES": "%r",
+            "RWY \\d\\d[LR] CONDITION CODES": "%r",
+            "CTC CD ON 121.4.": "",
+            "CTC FSS FOR INFO.": "",
+            "CTC GND 121.4 FOR PUSHBACK.": "",
+            "G ENTRANCE AT SHELTAIR CLSD.": "",
+            "TWR FREQ FOR CD, GND, PUSHBACK, AND TAXI IS 119.3.": "",
+            "TAXIWAY GOLF AT SHELTAIR CLOSED.": "",
+            "TWR FREQ FOR CD, GND, PUSHBACK, AND TAXI IS 119.3.": "",
+            "TWR FREQ FOR RWY 10L IS 119.3 TWR FREQ FOR RWY 10R IS 120.2.": "",
+            "TWR FREQ FOR RWY 10L IS 119.3 TWR FREQ FOR RWY 10R IS 120.2, CTC CD ON 121.4.": "",
+            "TWR FREQ FOR RWY 28R IS 119.3 TWR FREQ FOR RWY 28L IS 120.2.": "",
+            "TWR FREQ FOR RWY 28R IS 119.3 TWR FREQ FOR RWY 28L IS 120.2, CTC CD ON 121.4.": "",
+            "TWR FREQ IS 119.3.": "",
+            "TWR FREQ IS 119.3, CTC CD ON 121.4.": "",
+            "TWR FREQ IS 120.2.": "",
+            "TWR FREQ IS 120.2, CTC CD ON 121.4.": "",
+            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}.": "%r",
+            "USE CAUTION FOR FLYING REINDEER": ""
         }
     }
 }

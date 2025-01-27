@@ -26,3 +26,19 @@ __[Download v1.3.1](https://github.com/glott/vATISLoad/releases/latest/download/
 - For example, a person signed onto a `ZOA`, `NCT`, `SFO`, `OAK`, `SJC`, `SMF`, or `RNO` position would be patched to the `Oakland ARTCC (ZOA)`.
 
 - This does not work in the other direction - a `San Francisco ATCT (SFO)` vATIS profile would only be selected for a `SFO` controller. 
+
+- Submit a pull request to add additional facility patching data.
+
+###  Replacements
+
+- Replacements are defined in the [vATISLoadConfig.json](https://github.com/glott/vATISLoad/blob/main/vATISLoadConfig.json) file. 
+
+- Replacements allow text to be stripped/modified from a D-ATIS to make it more suitable to regular usage.
+
+- Each listed text will be replaced by the defined replacements. 
+
+- Regex replacements are supported by including `%r` at the beginning of the replacement section (`%r` will be stripped out in the actual replacement). See `KMIA` or `KFLL` for valid regex replacement examples. 
+
+- Replacements occur before any contractions are replaced in the text. 
+
+- Submit a pull request to add additional replacement data.
