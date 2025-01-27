@@ -33,8 +33,7 @@ scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
 tab_sizes = {'small': 70, 'large': 95, 'small_con': 90, 'large_con': 118}
 
 # Set to False for testing
-RUN_UPDATE = True
-DESKTOP_VERSION = True
+RUN_UPDATE = False
 
 def update_vATISLoad():
     online_file = ''
@@ -522,10 +521,9 @@ for station in stations:
     mouse_listener.on_move = on_move
     mouse_listener.start()
 
-    if DESKTOP_VERSION:
-        i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
-    else:
-        i += await load_atis(station, stations, data, atis_data, atis_replacements)
+    # Use first line for Desktop, second line for Jupyter
+    # i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
+    i += await load_atis(station, stations, data, atis_data, atis_replacements)
     
     mouse_listener.stop()
 
