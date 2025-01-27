@@ -14,8 +14,7 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyautogui']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyperclip']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow'
-                          ]);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywinutils']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywin32']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
