@@ -14,7 +14,8 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyautogui']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyperclip']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow'
+                          ]);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywinutils']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywin32']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
@@ -37,6 +38,26 @@ def set_foreground_window(hwnd):
     pyautogui.FAILSAFE = False
     pyautogui.press('alt')
     win32gui.SetForegroundWindow(hwnd)
+
+def get_win(exe_name, window_title):
+    for window in pygetwindow.getAllWindows():
+        thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
+        process = psutil.Process(process_id)
+        process_name = process.name()
+        process_path = process.exe()
+        if exe_name in process_path:
+            if window.title == window_title:
+                return window
+def click_xy(xy, win, sf=False, d=0.01):
+    x, y = xy
+    if sf:
+        x *= scale_factor
+        y *= scale_factor
+    x += win.left
+    y += win.top
+    time.sleep(d)
+    pyautogui.moveTo(x, y)
+    pyautogui.click()
 
 def determine_active_profile():
     crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
@@ -71,7 +92,6 @@ def determine_active_profile():
                 if not('(' in  data['name'] and ')' in data['name']):
                     continue
                 vatis_abr = data['name'].split('(')[1].split(')')[0]
-                print(vatis_abr)
                 if vatis_abr in crc_name or (len(facility_id) > 0 and vatis_abr in facility_id):
                     return data['name']
 
@@ -132,27 +152,6 @@ def open_vATIS():
                 time.sleep(0.1)
     return []
 
-def get_win(exe_name, window_title):
-    for window in pygetwindow.getAllWindows():
-        thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
-        process = psutil.Process(process_id)
-        process_name = process.name()
-        process_path = process.exe()
-        if exe_name in process_path:
-            if window.title == window_title:
-                return window
-
-def click_xy(xy, win, sf=False, d=0.01):
-    x, y = xy
-    if sf:
-        x *= scale_factor
-        y *= scale_factor
-    x += win.left
-    y += win.top
-    time.sleep(d)
-    pyautogui.moveTo(x, y)
-    pyautogui.click()
-
 async def get_online_atises():
     # url = "https://data.vatsim.net/v3/vatsim-data.json"
     # response = requests.get(url)
@@ -200,6 +199,26 @@ def get_stations(data):
         stations.append(s)
 
     return stations
+
+def get_atis_replacements(stations):
+    stations = list(set(value.replace('_A', '').replace('_D', '') for value in stations))
+
+    config = {}
+    try:
+        url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoadConfig.json'
+        config = json.loads(requests.get(url).text)
+    except Exception as ignored:
+        pass
+
+    if 'replacements' not in config:
+        return {}
+
+    replacements = {}
+    for a in config['replacements']:
+        if a in stations:
+            replacements[a] = config['replacements'][a]
+
+    return replacements
 
 def get_contractions(station, data):
     c = {}
@@ -273,7 +292,7 @@ def get_all_datises():
     url = 'https://datis.clowd.io/api/all'
     return json.loads(requests.get(url).text)
 
-def get_datis(ident, atis_data, data):
+def get_datis(ident, atis_data, data, replacements):
     atis_type = 'combined'
     if '_A' in ident:
         atis_type = 'arr'
@@ -291,23 +310,37 @@ def get_datis(ident, atis_data, data):
         if atis_data[n]['type'] != atis_type:
             continue
         
+        # Strip beginning and ending D-ATIS text
         datis = atis_data[n]['datis']
         datis = re.sub('.*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ', '', datis)
         datis = '. '.join(datis.split('. ')[1:])
         datis = re.sub(' ...ADVS YOU HAVE.*', '', datis)
-        datis = datis.replace('...', '/./').replace('..', '.') \
-            .replace('/./', '...').replace('  ', ' ').replace(' . ', '. ') \
-            .replace(', ,', ',').replace(' ; ', '; ').replace(' .,', ' ,') \
-            .replace(' , ', ', ').replace('., ', ', ').replace('&amp;', '&')
         datis = datis.replace('NOTICE TO AIR MISSIONS, NOTAMS. ', 'NOTAMS... ') \
             .replace('NOTICE TO AIR MISSIONS. ', 'NOTAMS... ')
 
+        # Replace defined replacements
+        for r in replacements:
+            if '%r' in replacements[r]:
+                datis = re.sub(r + '[\,\.\;]{1,2}', replacements[r].replace('%r', ''), datis)
+            else:
+                datis = re.sub(r + '[\,\.\;]{1,2}', replacements[r], datis)
+        datis = re.sub(r'\s+', ' ', datis).strip()
+
+        # Clean up D-ATIS
+        datis = datis.replace('...', '/./').replace('..', '.') \
+            .replace('/./', '...').replace('  ', ' ').replace(' . ', '. ') \
+            .replace(', ,', ',').replace(' ; ', '; ').replace(' .,', ' ,') \
+            .replace(' , ', ', ').replace('., ', ', ').replace('&amp;', '&') \
+            .replace(' ;.', '.').replace(' ;,', ',')
+
+        # Replace contractions
         contractions = get_contractions(ident, data)
         for c, v in contractions.items():
             if not c.isdigit():
                 datis = datis.replace(c + ',', v + ',').replace(c + '.', v + '.') \
                 .replace(c + ' ', v + ' ').replace(c + ';', v + ';')
-        
+
+        # Split at NOTAMs
         if 'NOTAMS' in datis:
             atis_info = datis.split('NOTAMS... ')
         else:
@@ -315,7 +348,7 @@ def get_datis(ident, atis_data, data):
     
     return atis_info
 
-async def load_atis(station, stations, data, atis_data):
+async def load_atis(station, stations, data, atis_data, atis_replacements):
     left_pad = await get_station_position(station, stations)
     
     if left_pad == -1:
@@ -344,7 +377,12 @@ async def load_atis(station, stations, data, atis_data):
     click_xy([500, 500], win, d=0.1)
     click_xy([500, 550], win, d=0.1)
 
-    atis = get_datis(station, atis_data, data)
+    # Add ATIS replacements
+    replacements = {}
+    if station[0:4] in atis_replacements:
+        replacements = atis_replacements[station[0:4]]
+    
+    atis = get_datis(station, atis_data, data, replacements)
     if len(atis) == 0:
         return 0
     # Fill in AIRPORT CONDITIONS field
@@ -413,7 +451,13 @@ for i in range(0, 50):
         time.sleep(0.1)
         pass
 
-time.sleep(1.0)
+# Get ATIS replacements
+t0 = time.time()
+atis_replacements = get_atis_replacements(stations)
+dt = time.time() - t0
+if dt < 1.0:
+    time.sleep(1.0 - dt)
+
 i = 0
 # Load ATIS information
 for station in stations:
@@ -428,11 +472,10 @@ for station in stations:
     mouse_listener.start()
 
     # Comment as needed for Jupyter or desktop
-    # i += await load_atis(station, stations, data, atis_data)
+    # i += await load_atis(station, stations, data, atis_data, atis_replacements)
     i += asyncio.run(load_atis(station, stations, data, atis_data))
     
     mouse_listener.stop()
-    
 
 # Restore these items in the future
 # time.sleep(3)

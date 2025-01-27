@@ -53,6 +53,7 @@
             "\\d+ / \\d+ / \\d+ AT \\d{4} ZULU": "%r",
             "\\d+ / \\d+ / \\d+ AT \\d{4} ZULU, RUNWAY \\d\\d[LR] CONDITION CODE": "%r",
             "RWY \\d\\d[LR] CONDITION CODE": "%r",
+            "RWY \\d\\d[LR] CONDITION CODES": "%r",
             "CTC CD ON 121.4": "",
             "CTC FSS FOR INFO": "",
             "CTC GND 121.4 FOR PUSHBACK": "",
