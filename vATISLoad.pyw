@@ -66,27 +66,33 @@ def determine_active_profile():
                     crc_name = data['Name']
                     crc_data = data
 
+    facility_id = ''
+    try:
+        facility_id = crc_data['DisplayWindowSettings'][0]['DisplaySettings'][0]['FacilityId']
+    except Exception as ignored:
+        pass
+    
     vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
     for filename in os.listdir(vatis_profiles):
         if filename.endswith('.json'): 
             file_path = os.path.join(vatis_profiles, filename)
             with open(file_path, 'r') as f:
                 data = json.load(f)
-                if not '(' in  data['name']:
+                data['name'] = data['name'].replace('[', '(').replace(']', ')')
+                if not('(' in  data['name'] and ')' in data['name']):
                     continue
-                vatis_abr = data['name'].split('(')[1][0:3]
-                if vatis_abr in crc_name:
+                vatis_abr = data['name'].split('(')[1].split(')')[0]
+                print(vatis_abr)
+                if vatis_abr in crc_name or (len(facility_id) > 0 and vatis_abr in facility_id):
                     return data['name']
 
     config = {}
-    facility_id = ''
     try:
         url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoadConfig.json'
         config = json.loads(requests.get(url).text)
-        facility_id = crc_data['DisplayWindowSettings'][0]['DisplaySettings'][0]['FacilityId']
     except Exception as ignored:
         pass
-
+    
     if 'facility-patches' in config and facility_id in config['facility-patches']:
         patch = config['facility-patches'][facility_id]
 
@@ -95,9 +101,10 @@ def determine_active_profile():
                 file_path = os.path.join(vatis_profiles, filename)
                 with open(file_path, 'r') as f:
                     data = json.load(f)
-                    if not '(' in  data['name']:
+                    data['name'] = data['name'].replace('[', '(').replace(']', ')')
+                    if not('(' in  data['name'] and ')' in data['name']):
                         continue
-                    vatis_abr = data['name'].split('(')[1][0:3]
+                    vatis_abr = data['name'].split('(')[1].split(')')[0]
                     if vatis_abr in patch:
                         return data['name']
     return ''
