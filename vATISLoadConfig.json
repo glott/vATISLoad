@@ -1,17 +1,17 @@
 {
     "facility-patches":
     {
-        "MI": "ZMA",
-        "TP": "ZMA",
-        "FL": "ZMA",
-        "PB": "ZMA",
-        "RS": "ZMA",
-        "NC": "ZOA",
-        "SF": "ZOA",
-        "OA": "ZOA",
-        "SJ": "ZOA",
-        "SM": "ZOA",
-        "RN": "ZOA"
+        "MIA": "ZMA",
+        "TPA": "ZMA",
+        "FLL": "ZMA",
+        "PBI": "ZMA",
+        "RSW": "ZMA",
+        "NCT": "ZOA",
+        "SFO": "ZOA",
+        "OAK": "ZOA",
+        "SJC": "ZOA",
+        "SMF": "ZOA",
+        "RNO": "ZOA"
     },
     "replacements":
     {
@@ -69,8 +69,141 @@
             "TWR FREQ IS 119.3, CTC CD ON 121.4": "",
             "TWR FREQ IS 120.2": "",
             "TWR FREQ IS 120.2, CTC CD ON 121.4": "",
-            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}": "%r",
-            "USE CAUTION FOR FLYING REINDEER": ""
+            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}": "%r"
+        },
+        "KTPA":
+        {
+            "01L": "1L",
+            "01R": "1R",
+            " ;, ": ", ",
+            " ; ": "; ",
+            "BIG BLACK HAWK REPORTED ON ONE LEFT FINAL 100 FEET": "",
+            "CONTACT GROUND ON 121.35": "",
+            "RY 19L, 19R, 1L SFL OTS, RY 19R, 19L, 01R, 10 PAPI OTS": "",
+            "RY 1L ALS OTS, RY 1L SFL OTS, RY 19L, 10 PAPI OTS, RY 19L RVR OTS, RY 1R RVR OTS": "",
+            "RY 1L ALS OTS, RY 1L SFL OTS, RY 19R, 19L, 10 PAPI OTS, RY 19L RVR OTS, RY 1R RVR OTS": "",
+            "RY 1L ALS OTS, RY 1L SFL OTS, RY 19R, 19L, 10 PAPI OTS, RY 19L RVR OTS, RY 1R RVR OTS, FREQ 121.7 OTS": "",
+            "RY \\d{1,2}[LR] ALS OTS": "%r",
+            "RY \\d{1,2}[LR] SFL OTS": "%r",
+            "RY \\d{1,2}[LR] RVR OTS": "%r"
+        },
+        "KPBI":
+        {
+            "AUTHORIZED DRONES \\d{1,2} MILES \\w{1,} OF THE AIRPORT AOB \\d{1,4} FT AGL": "%r",
+            "BA ADVZYS IN EFCT": "",
+            "CHECK NOTAM 5 6 2 5 2 FOR T F R": "",
+            "DEPARTURE END": "",
+            "DRONES \\d{1,2} \\w{1,} \\w{1,} BELOW \\d{1,4} FEET": "%r",
+            "DRONES \\d{1,2} \\w{1,} BELOW \\d{1,4} FEET": "%r",
+            "FICON \\d \\d \\d": "%r",
+            "GA CUSTOMS RAMP SOUTH ACCESS CLSD": "",
+            "PALM BEACH LLWAS OTS": "",
+            "PALM BEACH VOR OTS": "",
+            "RWY \\d{1,2}[LR]?, \\d{1,2}[LR]? REIL OTS": "%r",
+            "RWY \\d{1,2}[LR]? REIL OTS": "%r",
+            "RWY \\d{1,2}[LR]? CONDITION CODES, \\d, \\d, \\d, AT \\d{1,4}": "%r",
+            "UAS ACTIITY \\d{1,2} MILE \\w{1,} OF PBI AOB \\d{1,4} FEET": "%r",
+            "USE CAUTION DRONE ACTIVITY \\d{1,2} NM \\w{1,} OF PBI AT OR BELOW \\d{1,4} FT AGL": "%r",
+            "USE CAUTION DRONE ACTIVITY \\d{1,2} NM \\w{1,} OF PBI AT OR BELOW \\d{1,4} FT": "%r",
+            "USE CAUTION FIRE WORKS OVER MAR A LAGO STARTING AT \\w{1,} \\w{1,} PM": "%r",
+            "USE CAUTION FOR UNAUTHORIZED LASER EVENT \\w{1,} MILES \\w{1,} OF PALM BEACH AIRPORT \\w{1,} IN COLOR": "%r"
+        },
+        "KRSW":
+        {
+            ";,": ";",
+            "EXPECT DEPARTURE DELAYS FOR IN TRAIL SPACING": "",
+            "CD AND GC COMBINED ON 121.9": "",
+            "CD AND GC COMBINED ON 128.75": "",
+            "\\w{1,} MILES \\w{1,} \\w{1,} OF SOUTHWEST FLORIDA INTERNATIONAL AIRPORT, \\d{1,4} FEET, \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "\\w{1,} MILES \\w{1,} OF SOUTHWEST FLORIDA INTERNATIONAL AIRPORT, \\d{1,4} FEET, \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "FREQ 124.125 OTS": "",
+            "LBV TACAN OTS": "",
+            "NMRS MARKINGS NOT STD CHECK NOTAMS": "",
+            "NUMEROUS CRANES INVOF THE AIRPORT": "",
+            "RSW PRIMARY RADAR OUT OF SERVICE": "",
+            "RSW VOR OTS": "",
+            "RWY \\d{1,2} PAPI OTS": "%r",
+            "RWY \\d{1,2} REILS OTS": "%r",
+            "RWY \\d{1,2} RVR OTS": "%r",
+            "UNAUTH LASER ILLUMINATION EVENT": "",
+            "VFR SERVICES AVAILABLE ONLY TO AIRCRAFT WITH TRANSPONDERS AND WILL BE LIMITED TO SAFETY ALERTS, TRAFFIC ADVISORIES, AND SEQUENCING TO SOWTH WEST FLORIDA INTERNATIONAL AIRPORT": "",
+            "VFR SERVICES AVAILABLE ONLY TO AIRCRAFT WITH TRANSPONDERSAND WILL BE LIMITED TO SAFETY ALERTS, TRAFFIC ADVISORIES, AND SEQUENCING TO SOWTH WEST FLORIDA INTERNATIONAL AIRPORT": ""
+        },
+        "KSFO":
+        {
+            "ALTERNATE OVERNIGHT PARKING AT OAKLAND AIRPORT": "",
+            "ALTERNATE OVERNIGHT PARKING AVAILABLE AT OAKLAND METROPOLITAN AIRPORT": "",
+            "DRONE \\w{1,} MILE \\w{1,} OF THE AIRPORT AT \\d{1,4} FEET": "%r",
+            "DROP AND GO ONLY": "",
+            "GATEHOLD PROCEDURES IN EFCT, ALL A/C CTC GH 124.25 WHEN READY FOR ENG START OR PB": "",
+            "NO OVERNIGHT SIGNATURE PARKING": "",
+            "NO OVERNIGHT SIGNATURE PARKING AVAILABE": "",
+            "PAEW ADJ IN SAFETY AREA OF ALL RWYS NEAR VOR": "",
+            "RY \\d{1,2}[LR] PAPI OTS": "%r",
+            "TRML A B C & D1 TO D9 GND 124.25 ALL OTHERS GND 121.8": "",
+            "UNATHZD LASER ILMN EVNT \\d{4}Z \\d{1,2} MILE FINAL, UNKN ALT, \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "UNATHZD LASER ILMN EVNT \\d{4}Z \\d{1,2} MILE FINAL, \\d{1,4} FEET, \\w{1,} LASER, FROM THE \\w{1,}": "%r"
+        },
+        "KOAK":
+        {
+            "\\d{1,2} MILES \\w{1,} RWY \\d{1,2}[LR]?, \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "\\d{1,2} MILES \\w{1,}, \\w{1,} LASER": "%r",
+            "FLOW TO ([A-Z]{3}\\, ){1,}[A-Z]{3}": "%r",
+            "FLOW TO ([A-Z]{3})": "%r",
+            "GROUND DELAY PROGRAM TO COLORADO SKI COUNTRY AIRPORTS": "",
+            "GROUND DELAY TO ALL OF COLORADO AND MEXICO EXPECT LONG DELAYS": "",
+            "GROUND DELAY TO SOME COLORADO AND MEXICO AIRPORT, EXPECT DELAYS": "",
+            "GROUND STOP TO \\w{3}": "%r",
+            "RWY \\d{1,2}[LR]?/\\d{1,2}[LR]?/\\d{1,2}[LR]?/\\d{1,2}[LR]? RWYCC \\d/\\d/\\d AT \\d{4}": "%r",
+            "RWY \\d{1,2}[LR]? SFL, OTS": "",
+            "RWY \\d{1,2}[LR]? PAPIS, OTS": "",
+            "SAU OTS": "",
+            "SOUTH FIELD GROUND CONTROL FREQUENCY USE 126.0": "",
+            "UNAUTH LASER ILLUMINATION EVENT. AT \\d{4}": "%r"
+        },
+        "KSJC":
+        {
+            "CTC 121.7 FOR CLNC DLVRY": "",
+            "CTC 124.0 FOR GND AND CLNC DLVRY": "",
+            "CTC NCT 121.3 FOR IFR CLNC AND FOR RLS": "",
+            "CTC NORCAL APCH ON 121.3": "",
+            "FOR IFR RELEASE CONTACT NORCAL APPROACH 121.3": "",
+            "RWY \\d{1,2}[LR]?, RWY \\d{1,2}[LR]?, CONDITION CODES, \\d,\\d,\\d, SLIPPERY WHEN WET, AT \\d{4}": "%r",
+            "RWY \\d{1,2}[LR]?, RWY \\d{1,2}[LR]?, CONDITION CODES, \\d,\\d,\\d, AT \\d{4}": "%r",
+            "RWY \\d{1,2}[LR]?, RWY \\d{1,2}[LR]?, CONDITION CODES \\d,\\d,\\d": "%r",
+            "RWY \\d{1,2}[LR]? ALS OTS": "%r",
+            "UNAUTHORIZED LASER ILLUMINATION \\d{1,2} MI \\w{1,} OF RUNWAY \\d{1,2}[LR]?, LASER": "%r",
+            "UNAUTHORIZED LASER ILLUMINATION AT, \\d{4} \\w{1,} SIDE OF \\d{1,2} MILE FINAL, AT \\d{1,4} FEET LASER": "%r",
+            "UNAUTHORIZED LASER ILLUMINATION AT, \\d{4} \\d{1,2} MILE \\w{1,} OF \\d{1,2} MILE FINAL, AT \\d{1,4} FEET LASER, \\w{1,}": "%r",
+            "UNAUTHORIZED LASER ILLUMINATION AT, \\d{4} \\d{1,2} MILE \\w{1,} OF \\d{1,2} MILE FINAL, AT \\d{1,4} FEET LASER": "%r"
+        },
+        "KSMF":
+        {
+            "BIRD & CROP DUSTERS": "",
+            "BIRD ACTIVITY VICINITY ARPT": "",
+            "CD IS ON 121.7": "",
+            "METERING IN EFFECT FOR ([A-Z]{3}\\, ){1,}[A-Z]{3}": "%r",
+            "METERING IN EFFECT FOR ([A-Z]{3}\\, ){1,}[A-Z]{3} [A-Z]{3}": "%r",
+            "METERING IN EFFECT FOR ([A-Z]{3})": "%r",
+            "RWY \\d{1,2}[LR]? CONDITION CODES, \\d \\d \\d AT \\d{4}": "%r"
+        },
+        "KRNO":
+        {
+            "AT, \\d{4} \\d{1,2} MILES \\w{1,} OF RENO AIRPORT, AT \\d{1,5} FEET \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "AT, \\d{4} \\d{1,2} MI FINAL RWY \\d{1,2}[LR]?, AT \\d{1,4} FEET \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "AT, \\d{4} \\d{1,2} MILE FINAL RWY \\d{1,2}[LR]?": "%r",
+            "BA ADZYS IN EFFECT, RWY \\d{1,2}[LR]?, CONDITION CODE, \\d, \\d, \\d, AT \\d{4}": "",
+            "BRAKING ACTION \\w{1,} RPTD BY \\w{1,}, AT \\d{4} Z": "",
+            "CRANE .\\d{1,2} MILES \\w{1,} \\d{1,5} FEET AGL": "%r",
+            "CRANE .\\d{1,2} MILES \\w{1,} \\w{1,} \\w{1,} OF RUNWAY \\d{1,2}[LR]? APPROACH END \\d{1,5} FEET AGL": "%r",
+            "CRANE .\\d{1,2} MILES \\w{1,} \\w{1,} OF RUNWAY \\d{1,2}[LR]? APPROACH END \\d{1,5} FEET AGL": "%r",
+            "CRANE .\\d{1,2} MILES \\w{1,} OF RENO AIRPORT \\d{1,5} FEET AGL": "%r",
+            "CRANE .\\d{1,2} MILES \\w{1,} OF RUNWAY \\d{1,2}[LR]? APPROACH END \\d{1,5} FEET AGL": "%r",
+            "LASER \\w{1,} OF THE AIRPORT, AT \\d{1,5} FEET \\w{1,} LASER, FROM THE \\w{1,}": "%r",
+            "MODERATE TURBULENCE RPTD BELOW \\d{1,5}": "%r",
+            "SEVERE TURBULENCE RPTD BELOW \\d{1,5}": "%r",
+            "UNAUTH LASER ILLUM EVENT": "",
+            "USE CAUTION FOR WIDE SPREAD GLIDER SOARING OPERATIONS": ""
         }
     }
 }
