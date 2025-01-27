@@ -30,8 +30,45 @@ from win32 import win32api, win32gui, win32gui, win32process
 from win32.lib import win32con
 
 scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
-
 tab_sizes = {'small': 70, 'large': 95, 'small_con': 90, 'large_con': 118}
+
+# Set to False for testing
+RUN_UPDATE = True
+DESKTOP_VERSION = True
+
+def update_vATISLoad():
+    online_file = ''
+    url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoad.pyw'
+    try:
+        online_file = requests.get(url).text.split('\n')
+    except Exception as ignored:
+        return
+
+    up_to_date = True
+    with open(sys.argv[0], 'r') as FileObj:
+        i = 0
+        for line in FileObj:
+            if i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
+                up_to_date = False
+                break
+            i += 1
+
+    if up_to_date:
+        return
+
+    try:
+        os.rename(sys.argv[0], sys.argv[0] + '.bak')
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(sys.argv[0], 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192): 
+                    f.write(chunk)
+
+        os.remove(sys.argv[0] + '.bak')
+        
+    except Exception as ignored:
+        if not os.path.isfile(sys.argv[0]) and os.path.isfile(sys.argv[0] + '.bak'):
+            os.rename(sys.argv[0] + '.bak', sys.argv[0])
 
 def set_foreground_window(hwnd):
     pyautogui.FAILSAFE = False
@@ -425,6 +462,9 @@ async def load_atis(station, stations, data, atis_data, atis_replacements):
     
     return 0
 
+if RUN_UPDATE:
+    update_vATISLoad()
+
 active_profile = determine_active_profile()
 if len(active_profile) == 0:
     print('Active profile not found.')
@@ -482,9 +522,10 @@ for station in stations:
     mouse_listener.on_move = on_move
     mouse_listener.start()
 
-    # Comment as needed for Jupyter or desktop
-    # i += await load_atis(station, stations, data, atis_data, atis_replacements)
-    i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
+    if DESKTOP_VERSION:
+        i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
+    else:
+        i += await load_atis(station, stations, data, atis_data, atis_replacements)
     
     mouse_listener.stop()
 
