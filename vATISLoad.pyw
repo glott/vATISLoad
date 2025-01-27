@@ -39,14 +39,22 @@ def set_foreground_window(hwnd):
     win32gui.SetForegroundWindow(hwnd)
 
 def get_win(exe_name, window_title):
-    for window in pygetwindow.getAllWindows():
-        thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
-        process = psutil.Process(process_id)
-        process_name = process.name()
-        process_path = process.exe()
-        if exe_name in process_path:
-            if window.title == window_title:
-                return window
+    for i in range(0, 100):
+        try:
+            for window in pygetwindow.getAllWindows():
+                thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
+                process = psutil.Process(process_id)
+                process_name = process.name()
+                process_path = process.exe()
+                if exe_name in process_path:
+                    if window.title == window_title:
+                        set_foreground_window(window._hWnd)
+                        return window
+        except Exception as ignored:
+            time.sleep(0.1)
+            pass
+    return None
+
 def click_xy(xy, win, sf=False, d=0.01):
     x, y = xy
     if sf:
@@ -320,9 +328,9 @@ def get_datis(ident, atis_data, data, replacements):
         # Replace defined replacements
         for r in replacements:
             if '%r' in replacements[r]:
-                datis = re.sub(r + '[\,\.\;]{1,2}', replacements[r].replace('%r', ''), datis)
+                datis = re.sub(r + '[,.;]{1,2}', replacements[r].replace('%r', ''), datis)
             else:
-                datis = re.sub(r + '[\,\.\;]{1,2}', replacements[r], datis)
+                datis = re.sub(r + '[,.;]{1,2}', replacements[r], datis)
         datis = re.sub(r'\s+', ' ', datis).strip()
 
         # Clean up D-ATIS
@@ -442,13 +450,7 @@ data = read_profile(active_profile)
 stations = get_stations(data)
 
 # Bring window to front
-for i in range(0, 50):
-    try:
-        win = get_win('vATIS.exe', 'vATIS')
-        set_foreground_window(win._hWnd)
-    except Exception as ignored:
-        time.sleep(0.1)
-        pass
+win = get_win('vATIS.exe', 'vATIS')
 
 # Get ATIS replacements
 t0 = time.time()
@@ -472,7 +474,7 @@ for station in stations:
 
     # Comment as needed for Jupyter or desktop
     # i += await load_atis(station, stations, data, atis_data, atis_replacements)
-    i += asyncio.run(load_atis(station, stations, data, atis_data))
+    i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
     
     mouse_listener.stop()
 
