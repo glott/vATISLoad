@@ -328,9 +328,9 @@ def get_datis(ident, atis_data, data, replacements):
         # Replace defined replacements
         for r in replacements:
             if '%r' in replacements[r]:
-                datis = re.sub(r + '[,.;]{1,2}', replacements[r].replace('%r', ''), datis)
+                datis = re.sub(r + '[,.;]{0,2}', replacements[r].replace('%r', ''), datis)
             else:
-                datis = re.sub(r + '[,.;]{1,2}', replacements[r], datis)
+                datis = re.sub(r + '[,.;]{0,2}', replacements[r], datis)
         datis = re.sub(r'\s+', ' ', datis).strip()
 
         # Clean up D-ATIS

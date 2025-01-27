@@ -161,6 +161,8 @@
         },
         "KSJC":
         {
+            " ;, ": "; ",
+            " ;. ": ". ",
             "CTC 121.7 FOR CLNC DLVRY": "",
             "CTC 124.0 FOR GND AND CLNC DLVRY": "",
             "CTC NCT 121.3 FOR IFR CLNC AND FOR RLS": "",
