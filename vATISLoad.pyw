@@ -522,8 +522,8 @@ for station in stations:
     mouse_listener.start()
 
     # Use first line for Desktop, second line for Jupyter
-    # i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
-    i += await load_atis(station, stations, data, atis_data, atis_replacements)
+    i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
+    # i += await load_atis(station, stations, data, atis_data, atis_replacements)
     
     mouse_listener.stop()
 
