@@ -513,9 +513,16 @@ dt = time.time() - t0
 if dt < 1.0:
     time.sleep(1.0 - dt)
 
-i = 0
+# Reverse alphabetical station order
+stations = sorted(stations, reverse=True)
+indices_D = [i for i, x in enumerate(stations) if x.endswith('_D')]
+indices_A = [i for i, x in enumerate(stations) if x.endswith('_A')]
+for index_D, index_A in zip(indices_D, indices_A):
+    stations[index_D], stations[index_A] = stations[index_A], stations[index_D]
+
 # Load ATIS information
-for station in sorted(stations, reverse=True):
+i = 0
+for station in stations:
     if i > 3: 
         break
 
