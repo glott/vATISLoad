@@ -43,7 +43,8 @@
             "UAS ACTIVITY REPORTED, \\d{1,2} MILES \\w{1,} OF MIA \\w{3,} THOUSAND \\w{3,} HUNDRED": "%r",
             "UNAUTHORIZED LASER ILLUMINATION AT \\d{4} ZULU, \\d{1,2} MILES \\w{3,} OF, MIA, AT \\d{1,4} THOUSAND FEET \\w{3,} IN COLOR": "%r",
             "UNAUTHORIZED LASER ILLUMINATION AT \\d{4} ZULU, \\d{1,2} \\w{3,} OF, MIA, \\w{3,} IN COLOR": "%r",
-            "VKZ VOR OTS": ""
+            "VKZ VOR OTS": "",
+            "CHECK NOTAMS FOR TFR.": ""
         },
         "KFLL":
         {
@@ -114,6 +115,7 @@
         "KRSW":
         {
             ";,": ";",
+            ";.": ".",
             "EXPECT DEPARTURE DELAYS FOR IN TRAIL SPACING": "",
             "CD AND GC COMBINED ON 121.9": "",
             "CD AND GC COMBINED ON 128.75": "",
