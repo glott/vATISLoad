@@ -31,7 +31,7 @@ import pyautogui, pyperclip, pygetwindow, psutil, requests, websockets, pynput
 from win32 import win32api, win32gui, win32gui, win32process
 from win32.lib import win32con
 
-scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
+scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 150
 tab_sizes = {'small': 70, 'large': 95, 'small_con': 90, 'large_con': 118}
 
 # Set to False for testing
@@ -95,7 +95,7 @@ def get_win(exe_name, window_title):
             pass
     return None
 
-def click_xy(xy, win, sf=False, d=0.01):
+def click_xy(xy, win, sf=True, d=0.01):
     x, y = xy
     if sf:
         x *= scale_factor
@@ -459,7 +459,7 @@ async def load_atis(station, stations, data, atis_data, atis_replacements):
     # This code likely won't work until there's a reliable way to check if something is online
     # Select profile again and connect ATIS
     
-    # click_xy([left_pad, 100], win, sf=False)
+    # click_xy([left_pad, 100], win, sf=True)
     # with pyautogui.hold('shift'):
     #     pyautogui.press('tab', presses=7)
     # pyautogui.press('enter')
