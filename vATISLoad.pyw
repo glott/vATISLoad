@@ -384,23 +384,11 @@ def get_datis(ident, atis_data, data, replacements):
         # Replace contractions
         contractions = get_contractions(ident, data)
         for c, v in contractions.items():
-            if c.isdigit():
-                continue
-            elif len(c) < 3 or re.search('\\d{1,2}[LRC]?', c):
-                datis = datis.replace(' ' + c + ' ', ' ' + v + ' ') \
-                    .replace(' ' + c + '.', ' ' + v + '.') \
-                    .replace(' ' + c + ',', ' ' + v + ',') \
-                    .replace(' ' + c + ';', ' ' + v + ';') \
-                    .replace('/' + c + ' ', '/' + v + ' ') \
-                    .replace('/' + c + '.', '/' + v + '.') \
-                    .replace('/' + c + ',', '/' + v + ',') \
-                    .replace('/' + c + ';', '/' + v + ';') \
-                    .replace(',' + c + ' ', ',' + v + ' ') \
-                    .replace(',' + c + '.', ',' + v + '.') \ 
-                    .replace(',' + c + ';', ',' + v + ';')
-            else:
-                datis = datis.replace(c + ',', v + ',').replace(c + '.', v + '.') \
-                .replace(c + ' ', v + ' ').replace(c + ';', v + ';')
+            if not c.isdigit():
+                datis = re.sub(r'(?<!@)\b' + c + r'\b,', v + ',', datis)
+                datis = re.sub(r'(?<!@)\b' + c + r'\b\.', v + '.', datis)
+                datis = re.sub(r'(?<!@)\b' + c + r'\b ', v + ' ', datis)
+                datis = re.sub(r'(?<!@)\b' + c + r'\b;', v + ';', datis)
 
         # Split at NOTAMs
         if 'NOTAMS' in datis:
