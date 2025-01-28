@@ -4,7 +4,6 @@
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
 from datetime import datetime
 
-# pip uninstall -y pyautogui pyperclip pygetwindow pywin32 pywinutils psutil
 import importlib.util as il
 if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
             il.find_spec('pygetwindow'), il.find_spec('win32api'), \
@@ -176,6 +175,7 @@ def get_active_profile_position(profile):
                 data = json.load(f)
                 profile_names.append(data['name'])
 
+    profile_names = sorted(profile_names, key=str.lower)
     if profile in profile_names:
         return profile_names.index(profile)
     return -1
