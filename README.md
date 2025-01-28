@@ -11,11 +11,11 @@ __[Download v1.3.2](https://github.com/glott/vATISLoad/releases/latest/download/
 ### Usage
 
 1) Download and install the latest version of [Python](https://www.python.org/downloads/).
-2) Ensure your vATIS profile name has the facility name in parentheses (e.g `Oakland ARTCC (ZOA)`). This is essential to automatically determining the vATIS profile to select. Square brackets (`[]`) are also accepted to surround the facility name. 
+2) Ensure your vATIS profile name has the facility name in parentheses (e.g. `Oakland ARTCC (ZOA)`). This is essential to automatically determining the vATIS profile to select. Square brackets (`[]`) are also accepted to surround the facility name. 
 3) Ensure each station in the vATIS profile has its first preset named `D-ATIS`.
-3) Launch `vATISLoad.pyw`.
-4) __Do not move your mouse/type__ while ATIS data is being populated. Your mouse may automatically be frozen for your convenience. 
-5) Connect ATISes at your discretion. 
+4) Launch `vATISLoad.pyw`.
+5) __Do not move your mouse/type__ while ATIS data is being populated. Your mouse may automatically be frozen for your convenience. 
+6) Connect ATISes at your discretion. 
 
 ### Facility Patches
 
