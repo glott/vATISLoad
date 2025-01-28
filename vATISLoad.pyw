@@ -23,6 +23,9 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'websockets']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pynput']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'Pillow']);
+
+    os.execv(sys.executable, ['python'] + sys.argv)
+
 os.system('cls')
 
 import pyautogui, pyperclip, pygetwindow, psutil, requests, websockets, pynput
