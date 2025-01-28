@@ -69,6 +69,8 @@ def update_vATISLoad():
         if not os.path.isfile(sys.argv[0]) and os.path.isfile(sys.argv[0] + '.bak'):
             os.rename(sys.argv[0] + '.bak', sys.argv[0])
 
+    os.execv(sys.executable, ['python'] + sys.argv)
+
 def set_foreground_window(hwnd):
     pyautogui.FAILSAFE = False
     pyautogui.press('alt')
