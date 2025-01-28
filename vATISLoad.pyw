@@ -515,7 +515,7 @@ if dt < 1.0:
 
 i = 0
 # Load ATIS information
-for station in stations:
+for station in sorted(stations, reverse=True):
     if i > 3: 
         break
 
