@@ -389,11 +389,15 @@ def get_datis(ident, atis_data, data, replacements):
             elif len(c) < 3 or re.search('\\d{1,2}[LRC]?', c):
                 datis = datis.replace(' ' + c + ' ', ' ' + v + ' ') \
                     .replace(' ' + c + '.', ' ' + v + '.') \
+                    .replace(' ' + c + ',', ' ' + v + ',') \
+                    .replace(' ' + c + ';', ' ' + v + ';') \
                     .replace('/' + c + ' ', '/' + v + ' ') \
                     .replace('/' + c + '.', '/' + v + '.') \
                     .replace('/' + c + ',', '/' + v + ',') \
+                    .replace('/' + c + ';', '/' + v + ';') \
                     .replace(',' + c + ' ', ',' + v + ' ') \
-                    .replace(',' + c + '.', ',' + v + '.')
+                    .replace(',' + c + '.', ',' + v + '.') \ 
+                    .replace(',' + c + ';', ',' + v + ';')
             else:
                 datis = datis.replace(c + ',', v + ',').replace(c + '.', v + '.') \
                 .replace(c + ' ', v + ' ').replace(c + ';', v + ';')
