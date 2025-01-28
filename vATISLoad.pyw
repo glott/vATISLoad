@@ -387,6 +387,10 @@ def get_datis(ident, atis_data, data, replacements):
             if not c.isdigit():
                 datis = datis.replace(c + ',', v + ',').replace(c + '.', v + '.') \
                 .replace(c + ' ', v + ' ').replace(c + ';', v + ';')
+            elif len(c) < 3 or re.search('\\d{1,2}[LRC]?', c):
+                datis = datis.replace(' ' + c , ' ' + v) \
+                    .replace('/' + c, '/' + v).replace(',' + c, ',' + v) \
+                    .replace(';' + c, ';' + v).replace('.' + c, '.' + v)
 
         # Split at NOTAMs
         if 'NOTAMS' in datis:
