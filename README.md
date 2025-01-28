@@ -23,7 +23,7 @@ __[Download v1.3.2](https://github.com/glott/vATISLoad/releases/latest/download/
 
 - Patches allow people signed onto a lower level position to utilize the higher level D-ATIS vATIS profile.
 
-- For example, a person signed onto a `ZOA`, `NCT`, `SFO`, `OAK`, `SJC`, `SMF`, or `RNO` position would be patched to the `Oakland ARTCC (ZOA)`.
+- For example, a person signed onto a `ZOA`, `NCT`, `SFO`, `OAK`, `SJC`, `SMF`, or `RNO` position would be patched to the `Oakland ARTCC (ZOA)` vATIS profile.
 
 - This does not work in the other direction - a `San Francisco ATCT (SFO)` vATIS profile would only be selected for a `SFO` controller. 
 
