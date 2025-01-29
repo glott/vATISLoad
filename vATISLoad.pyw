@@ -117,6 +117,8 @@ def determine_active_profile():
             with open(file_path, 'r') as f:
                 data = json.load(f)
                 dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
+                if 'LastUsedAt' not in data or data['LastUsedAt'] == None:
+                    continue
                 dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
                 if dt2 > dt1:
                     crc_lastused_time = data['LastUsedAt'].split('.')[0]
