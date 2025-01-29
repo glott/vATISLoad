@@ -11,7 +11,11 @@
         "OAK": "ZOA",
         "SJC": "ZOA",
         "SMF": "ZOA",
-        "RNO": "ZOA"
+        "RNO": "ZOA",
+        "P50": "ZAB",
+        "PHX": "ZAB",
+        "ABQ": "ZAB",
+        "ELP": "ZAB"
     },
     "replacements":
     {
