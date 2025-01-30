@@ -1,5 +1,5 @@
 #####################################################################
-########################### vATISLoad.py ############################
+############################# vATISLoad #############################
 #####################################################################
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
 from datetime import datetime
@@ -10,6 +10,10 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
             il.find_spec('psutil'), il.find_spec('requests'), \
             il.find_spec('pyscreeze'), il.find_spec('websockets'), \
             il.find_spec('pynput')]:
+
+    os.system('cmd /K \"cls & echo Updating required packages for vATISLoad.' + \
+        ' & echo Please wait a few minutes for packages to install. & timeout 5 & exit\"')
+
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyautogui']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyperclip']);
@@ -22,8 +26,6 @@ if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'websockets']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pynput']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'Pillow']);
-
-    os.execv(sys.executable, ['python'] + sys.argv)
 
 os.system('cls')
 
