@@ -91,8 +91,8 @@ def get_win(exe_name, window_title):
                         set_foreground_window(window._hWnd)
                         return window
         except Exception as ignored:
-            time.sleep(0.1)
             pass
+        time.sleep(0.1)
     return None
 
 def click_xy(xy, win, sf=True, d=0.01):
