@@ -183,10 +183,24 @@ def get_active_profile_position(profile):
     return -1
 
 def open_vATIS():
+    # Set 'autoFetchAtisLetter' to True
+    config_path = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\AppConfig.json'
+    try:
+        with open(config_path, 'r') as f:
+            data = json.load(f)
+            if 'autoFetchAtisLetter' in data:
+                data['autoFetchAtisLetter'] = True
+        with open(config_path, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception as ignored:
+        pass
+
+    # Close vATIS, then reopen vATIS
     os.system('taskkill /f /im vATIS.exe 2>nul 1>nul')
     exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
     subprocess.Popen(exe);
-    
+
+    # Open vATIS dialog
     for i in range(0, 50): 
         for window in pygetwindow.getAllWindows():
             if 'vATIS Profiles' in window.title:
@@ -454,12 +468,10 @@ async def load_atis(station, stations, data, atis_data, atis_replacements):
     pyperclip.copy('')
     click_xy([1145, 295], win, d=0.1)
 
-    pyautogui.hotkey('ctrl', 'd')
-
     # This code likely won't work until there's a reliable way to check if something is online
     # Select profile again and connect ATIS
     
-    # click_xy([left_pad, 100], win, sf=True)
+    # click_xy([left_pad, 100], win)
     # with pyautogui.hold('shift'):
     #     pyautogui.press('tab', presses=7)
     # pyautogui.press('enter')
