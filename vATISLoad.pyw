@@ -364,7 +364,6 @@ def get_datis(ident, atis_data, data, replacements):
         atis_type = 'arr'
     elif '_D' in ident:
         atis_type = 'dep'
-    ident = ident.split('_')[0]
 
     atis_info = []
     if 'error' in atis_data:
