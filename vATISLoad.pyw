@@ -318,10 +318,8 @@ async def get_station_position(station, stations):
         if s in offline_atises:
                 offline_atises.remove(s)
 
-    online_atises = sorted([item.replace('_A', '_Z') if '_A' in item else item for item in online_atises])
-    online_atises = [item.replace('_Z', '_A') if '_Z' in item else item for item in online_atises]
-    offline_atises = sorted([item.replace('_A', '_Z') if '_A' in item else item for item in offline_atises])
-    offline_atises = [item.replace('_Z', '_A') if '_Z' in item else item for item in offline_atises]
+    online_atises = sorted(online_atises)
+    offline_atises = sorted(offline_atises)
 
     left_pad = 20
     for atis in online_atises:
