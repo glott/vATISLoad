@@ -256,13 +256,21 @@ def read_profile(profile):
 
 def get_stations(data):
     stations = []
+    ordinal = False
     for station in data['stations']:
+        o = 0 if 'ordinal' not in station else station['ordinal']
+        if o != 0:
+            ordinal = True
+        
         s = station['identifier']
         if station['atisType'] == 'Departure':
             s += '_D'
         elif station['atisType'] == 'Arrival':
             s += '_A'
-        stations.append(s)
+        stations.insert(o, s)
+
+    if not ordinal:
+        stations = sorted(stations)
 
     return stations
 
@@ -310,22 +318,18 @@ async def get_station_position(station, stations):
     offline_atises = list(stations)
 
     for s, v in (await get_online_atises()).items():
-        if v == 'Observer':
-            online_atises.append(s + '*')
-        else:
-            online_atises.append(s)
-            
-        if s in offline_atises:
-                offline_atises.remove(s)
+        if v == 'Observer' and s == station:
+            return -1
+        
+        if s in stations:
+            online_atises.insert(stations.index(s), s)
 
-    online_atises = sorted(online_atises)
-    offline_atises = sorted(offline_atises)
+        if s in offline_atises:
+            offline_atises.remove(s)
 
     left_pad = 20
     for atis in online_atises:
         if station in atis:
-            if '*' not in atis:
-                return -1
             if '_' in atis:
                 left_pad += tab_sizes['large_con'] / 2
             else:
@@ -528,12 +532,9 @@ dt = time.time() - t0
 if dt < 1.0:
     time.sleep(1.0 - dt)
 
-# Reverse alphabetical station order
-stations = sorted(stations, reverse=True)
-
 # Load ATIS information
 i = 0
-for station in stations:
+for station in stations[::-1]:
     if i > 3: 
         break
 

@@ -2,11 +2,11 @@
 
 _by Josh Glottmann_
 
-**Version 1.3.4** - 02/16/2025
+**Version 1.3.5** - 03/07/2025
 
 Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.app/) by [Justin Shannon](https://github.com/JustinShannon)
 
-__[Download v1.3.4](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.pyw)__ 
+__[Download v1.3.5](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.pyw)__ 
 
 ### Usage
 
