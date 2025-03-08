@@ -506,7 +506,7 @@ async def load_atis(station, stations, data, atis_data, atis_replacements, conne
         time.sleep(0.05)
         return 0
 
-    i = 0
+    con_i = 0
     if connect:
         # Automatically connect ATISes
         click_xy([1070, 515], win, d=0.1)
@@ -514,14 +514,14 @@ async def load_atis(station, stations, data, atis_data, atis_replacements, conne
         for i in range(0, 50):
             c = pyautogui.pixel(x, y)
             if c[0] == 0 and c[1] == 70 and c[2] == 150:
-                i += 1
+                con_i = 1
                 break
             time.sleep(0.05)
 
     print(f'{station} is now loaded.')
     time.sleep(0.05)
     
-    return i
+    return con_i
 
 if RUN_UPDATE:
     update_vATISLoad()
