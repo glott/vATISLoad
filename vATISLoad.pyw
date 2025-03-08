@@ -80,6 +80,52 @@ def set_foreground_window(hwnd):
     pyautogui.press('alt')
     win32gui.SetForegroundWindow(hwnd)
 
+def reset_vATIS_win():
+    for window in pygetwindow.getAllWindows():
+        thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
+        process = psutil.Process(process_id)
+        process_name = process.name()
+        process_path = process.exe()
+        if 'vATIS.exe' in process_path:
+            return window
+    return None
+
+def refresh_vATIS():
+    win = reset_vATIS_win()
+    if win is None:
+        exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
+        subprocess.Popen(exe);
+        return
+
+    win32gui.SetForegroundWindow(win._hWnd)
+    win32gui.ShowWindow(win._hWnd, win32con.SW_RESTORE)
+    
+    if win.size[0] == 423:
+        click_xy([423 - 20, 15], win, d=0.1)
+        click_xy([50, 15], win, d=0.1)
+        win = reset_vATIS_win()
+        
+        win32gui.SetForegroundWindow(win._hWnd)
+        win32gui.ShowWindow(win._hWnd, win32con.SW_RESTORE)
+        time.sleep(0.2)
+
+    win = reset_vATIS_win()    
+    click_xy([100, 10], win)
+    time.sleep(0.2)
+
+    pyautogui.hotkey('alt', 'f4')
+    
+    time.sleep(0.2)
+    win = reset_vATIS_win()
+    if win is None:
+        exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
+        subprocess.Popen(exe);
+        return
+
+    if win.title == 'Confirm':
+        pyautogui.press('tab')
+        pyautogui.press('enter')
+
 def get_win(exe_name, window_title):
     for i in range(0, 100):
         try:
@@ -198,35 +244,21 @@ def open_vATIS():
         pass
 
     # Close vATIS, then reopen vATIS
-    os.system('taskkill /f /im vATIS.exe 2>nul 1>nul')
-    exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
-    subprocess.Popen(exe);
+    refresh_vATIS()
 
     # Open vATIS dialog
+    atis_data = get_all_datises()
     for i in range(0, 50): 
         for window in pygetwindow.getAllWindows():
             if 'vATIS Profiles' in window.title:
                 set_foreground_window(window._hWnd)
-                
-                t0 = time.time()
-                atis_data = get_all_datises()
-                dt = time.time() - t0
-                if dt < 0.5:
-                    time.sleep(0.5 - dt)
+                time.sleep(0.1)
                 return atis_data
             else:
                 time.sleep(0.1)
     return []
 
 async def get_online_atises():
-    # url = "https://data.vatsim.net/v3/vatsim-data.json"
-    # response = requests.get(url)
-    # data = response.json()
-
-    # vat_atises = []
-    # for atis in data['atis']:
-    #     vat_atises.append(atis['callsign'].replace('_ATIS', ''))
-    
     online_atises = {}
     async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.05) as websocket:
         for i in range(0, 20):
@@ -239,8 +271,6 @@ async def get_online_atises():
 
             if m['networkConnectionStatus'] != 'Disconnected' and m['station'] not in online_atises:
                 online_atises[m['station']] = m['networkConnectionStatus']
-            # elif m['networkConnectionStatus'] == 'Disconnected' and m['station'] in vat_atises:
-            #     online_atises[m['station']] = 'Connected'
     
     return online_atises
 
@@ -453,7 +483,8 @@ async def load_atis(station, stations, data, atis_data, atis_replacements):
     
     atis = get_datis(station, atis_data, data, replacements)
     if len(atis) == 0:
-        return 0
+        atis = ['', '']
+    
     # Fill in AIRPORT CONDITIONS field
     click_xy([335, 390], win)
     pyautogui.hotkey('ctrl', 'a')
@@ -471,19 +502,23 @@ async def load_atis(station, stations, data, atis_data, atis_replacements):
     pyperclip.copy('')
     click_xy([1145, 295], win, d=0.1)
 
-    # This code likely won't work until there's a reliable way to check if something is online
-    # Select profile again and connect ATIS
+    if len(atis[0]) == 0:
+        time.sleep(0.05)
+        return 0
     
-    # click_xy([left_pad, 100], win)
-    # with pyautogui.hold('shift'):
-    #     pyautogui.press('tab', presses=7)
-    # pyautogui.press('enter')
-    # time.sleep(1)
+    # Automatically connect ATISes
+    click_xy([1070, 515], win, d=0.1)
+    x, y = pyautogui.position()
+    for i in range(0, 50):
+        c = pyautogui.pixel(x, y)
+        if c[0] == 0 and c[1] == 70 and c[2] == 150:
+            break
+        time.sleep(0.05)
 
     print(f'{station} is now loaded.')
     time.sleep(0.05)
     
-    return 0
+    return 1
 
 if RUN_UPDATE:
     update_vATISLoad()
@@ -526,15 +561,20 @@ stations = get_stations(data)
 win = get_win('vATIS.exe', 'vATIS')
 
 # Get ATIS replacements
-t0 = time.time()
 atis_replacements = get_atis_replacements(stations)
-dt = time.time() - t0
-if dt < 1.0:
-    time.sleep(1.0 - dt)
+
+for i in range(0, 20):
+    # Use first line for Desktop, second line for Jupyter
+    num_online_atises = len(asyncio.run(get_online_atises()))
+    # num_online_atises = len(await get_online_atises())
+    time.sleep(.05)
+    
+    if num_online_atises > 0 or time.time() - t0 > 0.95:
+        break
 
 # Load ATIS information
 i = 0
-for station in stations[::-1]:
+for station in stations:
     if i > 3: 
         break
 
@@ -550,7 +590,3 @@ for station in stations[::-1]:
     # i += await load_atis(station, stations, data, atis_data, atis_replacements)
     
     mouse_listener.stop()
-
-# Restore these items in the future
-# time.sleep(3)
-# win32gui.ShowWindow(win._hWnd, win32con.SW_MINIMIZE);
