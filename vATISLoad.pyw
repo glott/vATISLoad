@@ -447,7 +447,7 @@ def get_datis(ident, atis_data, data, replacements):
     
     return atis_info
 
-async def load_atis(station, stations, data, atis_data, atis_replacements):
+async def load_atis(station, stations, data, atis_data, atis_replacements, connect=True):
     left_pad = await get_station_position(station, stations)
     
     if left_pad == -1:
@@ -505,20 +505,23 @@ async def load_atis(station, stations, data, atis_data, atis_replacements):
     if len(atis[0]) == 0:
         time.sleep(0.05)
         return 0
-    
-    # Automatically connect ATISes
-    click_xy([1070, 515], win, d=0.1)
-    x, y = pyautogui.position()
-    for i in range(0, 50):
-        c = pyautogui.pixel(x, y)
-        if c[0] == 0 and c[1] == 70 and c[2] == 150:
-            break
-        time.sleep(0.05)
+
+    i = 0
+    if connect:
+        # Automatically connect ATISes
+        click_xy([1070, 515], win, d=0.1)
+        x, y = pyautogui.position()
+        for i in range(0, 50):
+            c = pyautogui.pixel(x, y)
+            if c[0] == 0 and c[1] == 70 and c[2] == 150:
+                i += 1
+                break
+            time.sleep(0.05)
 
     print(f'{station} is now loaded.')
     time.sleep(0.05)
     
-    return 1
+    return i
 
 if RUN_UPDATE:
     update_vATISLoad()
@@ -576,8 +579,9 @@ for i in range(0, 20):
 # Load ATIS information
 i = 0
 for station in stations:
+    connect = True
     if i > 3: 
-        break
+        connect = False
 
     # Suppress mouse movements
     mouse_listener = pynput.mouse.Listener()
@@ -587,7 +591,7 @@ for station in stations:
     mouse_listener.start()
 
     # Use first line for Desktop, second line for Jupyter
-    i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements))
-    # i += await load_atis(station, stations, data, atis_data, atis_replacements)
+    i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements, connect))
+    # i += await load_atis(station, stations, data, atis_data, atis_replacements, connect)
     
     mouse_listener.stop()
