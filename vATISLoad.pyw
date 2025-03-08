@@ -561,6 +561,7 @@ stations = get_stations(data)
 win = get_win('vATIS.exe', 'vATIS')
 
 # Get ATIS replacements
+t0 = time.time()
 atis_replacements = get_atis_replacements(stations)
 
 for i in range(0, 20):
