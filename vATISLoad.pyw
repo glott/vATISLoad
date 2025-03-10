@@ -97,6 +97,7 @@ def refresh_vATIS():
         subprocess.Popen(exe);
         return
 
+    pyautogui.press('F24')
     win32gui.SetForegroundWindow(win._hWnd)
     win32gui.ShowWindow(win._hWnd, win32con.SW_RESTORE)
     
@@ -260,8 +261,8 @@ def open_vATIS():
 
 async def get_online_atises():
     online_atises = {}
-    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.05) as websocket:
-        for i in range(0, 20):
+    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+        for i in range(0, 250):
             await websocket.send(json.dumps({'type': 'getAtis'}))
             m = json.loads(await websocket.recv())['value']
             if m['atisType'] == 'Arrival':
@@ -465,10 +466,13 @@ async def load_atis(station, stations, data, atis_data, atis_replacements, conne
                 break
 
     # Make sure profile has D-ATIS preset
-    if station_data['presets'][0]['name'] != 'D-ATIS':
+    if 'presets' not in station_data:
+        return 0
+    elif len(station_data['presets']) == 0:
+        return 0
+    elif station_data['presets'][0]['name'] != 'D-ATIS':
         return 0
 
-    
     # Select profile
     click_xy([left_pad, 100], win)
 
