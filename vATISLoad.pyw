@@ -575,7 +575,6 @@ for i in range(0, 20):
     # Use first line for Desktop, second line for Jupyter
     # num_online_atises = len(asyncio.run(get_online_atises()))
     num_online_atises = len(await get_online_atises())
-    print(await get_online_atises())
     
     if num_online_atises > 0 or time.time() - t0 > 0.9:
         time.sleep(0.1)
