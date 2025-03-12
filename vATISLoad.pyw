@@ -576,8 +576,8 @@ for i in range(0, 20):
     num_online_atises = len(asyncio.run(get_online_atises()))
     # num_online_atises = len(await get_online_atises())
     
-    if num_online_atises > 0 or time.time() - t0 > 0.9:
-        time.sleep(0.1)
+    if num_online_atises > 0:
+        time.sleep(0.5)
         break
 
     time.sleep(.05)
