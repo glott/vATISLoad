@@ -5,39 +5,24 @@ import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
 from datetime import datetime
 
 import importlib.util as il
-if None in [il.find_spec('pyautogui'), il.find_spec('pyperclip'), \
-            il.find_spec('pygetwindow'), il.find_spec('win32api'), \
-            il.find_spec('psutil'), il.find_spec('requests'), \
-            il.find_spec('pyscreeze'), il.find_spec('websockets'), \
-            il.find_spec('pynput')]:
+if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil')]:
 
     os.system('cmd /K \"cls & echo Updating required packages for vATISLoad.' + \
         ' & echo Please wait a few minutes for packages to install. & timeout 5 & exit\"')
-
+    
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyautogui']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyperclip']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywinutils']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pywin32']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyscreeze']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'websockets']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pynput']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'Pillow']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
 
 os.system('cls')
 
-import pyautogui, pyperclip, pygetwindow, psutil, requests, websockets, pynput
-from win32 import win32api, win32gui, win32gui, win32process
-from win32.lib import win32con
-
-scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 150
-tab_sizes = {'small': 70, 'large': 95, 'small_con': 90, 'large_con': 118}
+import requests, websockets, psutil
 
 # Set to False for testing
 RUN_UPDATE = True
+SHUTDOWN_LIMIT = 60 * 5
+
 
 def update_vATISLoad():
     online_file = ''
@@ -75,235 +60,51 @@ def update_vATISLoad():
 
     os.execv(sys.executable, ['python'] + sys.argv)
 
-def set_foreground_window(hwnd):
-    pyautogui.FAILSAFE = False
-    pyautogui.press('alt')
-    win32gui.SetForegroundWindow(hwnd)
-
-def reset_vATIS_win():
-    for window in pygetwindow.getAllWindows():
-        thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
-        process = psutil.Process(process_id)
-        process_name = process.name()
-        process_path = process.exe()
-        if 'vATIS.exe' in process_path:
-            return window
-    return None
-
-def refresh_vATIS():
-    win = reset_vATIS_win()
-    if win is None:
-        exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
-        subprocess.Popen(exe);
-        return
-
-    pyautogui.press('F24')
-    win32gui.SetForegroundWindow(win._hWnd)
-    win32gui.ShowWindow(win._hWnd, win32con.SW_RESTORE)
-    
-    if win.size[0] == 423:
-        click_xy([423 - 20, 15], win, d=0.1)
-        click_xy([50, 15], win, d=0.1)
-        win = reset_vATIS_win()
-        
-        win32gui.SetForegroundWindow(win._hWnd)
-        win32gui.ShowWindow(win._hWnd, win32con.SW_RESTORE)
-        time.sleep(0.2)
-
-    win = reset_vATIS_win()    
-    click_xy([100, 10], win)
-    time.sleep(0.2)
-
-    pyautogui.hotkey('alt', 'f4')
-    
-    time.sleep(0.2)
-    win = reset_vATIS_win()
-    if win is None:
-        exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
-        subprocess.Popen(exe);
-        return
-
-    if win.title == 'Confirm':
-        pyautogui.press('tab')
-        pyautogui.press('enter')
-
-def get_win(exe_name, window_title):
-    for i in range(0, 100):
+async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT):
+    t0 = time.time()
+    for i in range(0, 250):
+        t1 = time.time()
+        if t1 - t0 > limit:
+            print('vATIS not open and/or a profile is not loaded, exiting vATISLoad.')
+            if shutdown:
+                sys.exit()
+            return
         try:
-            for window in pygetwindow.getAllWindows():
-                thread_id, process_id = win32process.GetWindowThreadProcessId(window._hWnd)
-                process = psutil.Process(process_id)
-                process_name = process.name()
-                process_path = process.exe()
-                if exe_name in process_path:
-                    if window.title == window_title:
-                        set_foreground_window(window._hWnd)
-                        return window
+            async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+                await websocket.send(json.dumps({'type': 'getStations'}))
+                try:
+                    await asyncio.wait_for(websocket.recv(), timeout=1)
+                    if time.time() - t0 > 5:
+                        time.sleep(1)
+                    return
+                except Exception as ignored:
+                    pass
         except Exception as ignored:
+            dt = time.time() - t1
+            if dt < 1:
+                time.sleep(1 - dt)
             pass
-        time.sleep(0.1)
-    return None
 
-def click_xy(xy, win, sf=True, d=0.01):
-    x, y = xy
-    if sf:
-        x *= scale_factor
-        y *= scale_factor
-    x += win.left
-    y += win.top
-    time.sleep(d)
-    pyautogui.moveTo(x, y)
-    pyautogui.click()
-
-def determine_active_profile():
-    crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
-    crc_name = ''
-    crc_data = {}
-    crc_lastused_time = '2020-01-01T08:00:00'
-    for filename in os.listdir(crc_profiles):
-        if filename.endswith('.json'): 
-            file_path = os.path.join(crc_profiles, filename)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
-                if 'LastUsedAt' not in data or data['LastUsedAt'] == None:
-                    continue
-                dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
-                if dt2 > dt1:
-                    crc_lastused_time = data['LastUsedAt'].split('.')[0]
-                    crc_name = data['Name']
-                    crc_data = data
-
-    facility_id = ''
-    try:
-        facility_id = crc_data['DisplayWindowSettings'][0]['DisplaySettings'][0]['FacilityId']
-    except Exception as ignored:
-        pass
+async def get_datis_stations():
+    await try_websocket()
     
-    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
-    for filename in os.listdir(vatis_profiles):
-        if filename.endswith('.json'): 
-            file_path = os.path.join(vatis_profiles, filename)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                data['name'] = data['name'].replace('[', '(').replace(']', ')')
-                if not('(' in  data['name'] and ')' in data['name']):
-                    continue
-                vatis_abr = data['name'].split('(')[1].split(')')[0]
-                if vatis_abr in crc_name or (len(facility_id) > 0 and vatis_abr in facility_id):
-                    return data['name']
-
-    config = {}
-    try:
-        url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoadConfig.json'
-        config = json.loads(requests.get(url).text)
-    except Exception as ignored:
-        pass
-    
-    if 'facility-patches' in config and facility_id in config['facility-patches']:
-        patch = config['facility-patches'][facility_id]
-
-        for filename in os.listdir(vatis_profiles):
-            if filename.endswith('.json'): 
-                file_path = os.path.join(vatis_profiles, filename)
-                with open(file_path, 'r') as f:
-                    data = json.load(f)
-                    data['name'] = data['name'].replace('[', '(').replace(']', ')')
-                    if not('(' in  data['name'] and ')' in data['name']):
-                        continue
-                    vatis_abr = data['name'].split('(')[1].split(')')[0]
-                    if vatis_abr in patch:
-                        return data['name']
-    return ''
-
-def get_active_profile_position(profile):
-    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
-    profile_names = []
-    for filename in os.listdir(vatis_profiles):
-        if filename.endswith('.json'): 
-            file_path = os.path.join(vatis_profiles, filename)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                profile_names.append(data['name'])
-
-    profile_names = sorted(profile_names, key=str.lower)
-    if profile in profile_names:
-        return profile_names.index(profile)
-    return -1
-
-def open_vATIS():
-    # Set 'autoFetchAtisLetter' to True
-    config_path = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\AppConfig.json'
-    try:
-        with open(config_path, 'r') as f:
-            data = json.load(f)
-            if 'autoFetchAtisLetter' in data:
-                data['autoFetchAtisLetter'] = True
-        with open(config_path, 'w') as f:
-            json.dump(data, f, indent=2)
-    except Exception as ignored:
-        pass
-
-    # Close vATIS, then reopen vATIS
-    refresh_vATIS()
-
-    # Open vATIS dialog
-    atis_data = get_all_datises()
-    for i in range(0, 50): 
-        for window in pygetwindow.getAllWindows():
-            if 'vATIS Profiles' in window.title:
-                set_foreground_window(window._hWnd)
-                time.sleep(0.1)
-                return atis_data
-            else:
-                time.sleep(0.1)
-    return []
-
-async def get_online_atises():
-    online_atises = {}
+    data = {}
     async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
-        for i in range(0, 250):
-            await websocket.send(json.dumps({'type': 'getAtis'}))
-            m = json.loads(await websocket.recv())['value']
-            if m['atisType'] == 'Arrival':
-                m['station'] += '_A'
-            elif m['atisType'] == 'Departure':
-                m['station'] += '_D'
+        await websocket.send(json.dumps({'type': 'getStations'}))
+        stations = json.loads(await websocket.recv())['stations']
 
-            if m['networkConnectionStatus'] != 'Disconnected' and m['station'] not in online_atises:
-                online_atises[m['station']] = m['networkConnectionStatus']
-    
-    return online_atises
+        for s in stations:
+            name = s['name']
 
-def read_profile(profile):
-    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
-    for filename in os.listdir(vatis_profiles):
-        if filename.endswith('.json'): 
-            file_path = os.path.join(vatis_profiles, filename)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                if data['name'] == profile:
-                    return data
-
-def get_stations(data):
-    stations = []
-    ordinal = False
-    for station in data['stations']:
-        o = 0 if 'ordinal' not in station else station['ordinal']
-        if o != 0:
-            ordinal = True
-        
-        s = station['identifier']
-        if station['atisType'] == 'Departure':
-            s += '_D'
-        elif station['atisType'] == 'Arrival':
-            s += '_A'
-        stations.insert(o, s)
-
-    if not ordinal:
-        stations = sorted(stations)
-
-    return stations
+            if s['atisType'] == 'Arrival':
+                name += '_A'
+            elif s['atisType'] == 'Departure':
+                name += '_D'
+            
+            if 'D-ATIS' in s['presets']:
+                data[name] = s['id']
+            
+    return data
 
 def get_atis_replacements(stations):
     stations = list(set(value.replace('_A', '').replace('_D', '') for value in stations))
@@ -325,10 +126,42 @@ def get_atis_replacements(stations):
 
     return replacements
 
-def get_contractions(station, data):
+async def get_current_profile_data():
+    stations = list((await get_datis_stations()).keys())
+    stations = list(set(value.replace('_A', '').replace('_D', '') for value in stations))
+    stations.sort()
+    
+    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
+    data = {}
+    for filename in os.listdir(vatis_profiles):
+        if not filename.endswith('.json'): 
+            continue
+        
+        file_path = os.path.join(vatis_profiles, filename)
+        with open(file_path, 'r') as f:
+            data = json.load(f)['stations']
+        
+        profile_datis_stations = []
+        for s in data:
+            if s['identifier'] in profile_datis_stations:
+                continue
+            
+            for p in s['presets']:
+                if p['name'] == 'D-ATIS':
+                    profile_datis_stations.append(s['identifier'])
+                    break
+    
+        if sorted(profile_datis_stations) == stations:
+            return data, profile_datis_stations
+
+    return data, []
+    
+async def get_contractions(station):
+    data = (await get_current_profile_data())[0]
+
     c = {}
     station_data = {}
-    for s in data['stations']:
+    for s in data:
         if station[0:4] in s['identifier']:
             if len(station) == 4:
                 station_data = s
@@ -336,6 +169,7 @@ def get_contractions(station, data):
             elif (station[5] == 'D' and s['atisType'] == 'Departure') or \
                 (station[5] == 'A' and s['atisType'] == 'Arrival'):
                 station_data = s
+
     contractions = station_data['contractions']
     for cont in contractions:
         c[cont['text']] = '@' + cont['variableName']
@@ -344,260 +178,161 @@ def get_contractions(station, data):
 
     return c
 
-async def get_station_position(station, stations):
-    online_atises = []
-    offline_atises = list(stations)
-
-    for s, v in (await get_online_atises()).items():
-        if v == 'Observer' and s == station:
-            return -1
-        
-        if s in stations:
-            online_atises.insert(stations.index(s), s)
-
-        if s in offline_atises:
-            offline_atises.remove(s)
-
-    left_pad = 20
-    for atis in online_atises:
-        if station in atis:
-            if '_' in atis:
-                left_pad += tab_sizes['large_con'] / 2
-            else:
-                left_pad += tab_sizes['small_con'] / 2
-            return left_pad
-        else:
-            if '_' in atis:
-                left_pad += tab_sizes['large_con']
-            else:
-                left_pad += tab_sizes['small_con']
-
-    for atis in offline_atises:
-        if station in atis:
-            if '_' in atis:
-                left_pad += tab_sizes['large'] / 2
-            else:
-                left_pad += tab_sizes['small'] / 2
-            return left_pad
-        else:
-            if '_' in atis:
-                left_pad += tab_sizes['large']
-            else:
-                left_pad += tab_sizes['small']
-    
-    return left_pad
-
-def get_all_datises():
+def get_datis_data():
     url = 'https://datis.clowd.io/api/all'
     return json.loads(requests.get(url).text)
 
-def get_datis(ident, atis_data, data, replacements):
+async def get_datis(station, atis_data, replacements):
     atis_type = 'combined'
-    if '_A' in ident:
+    if '_A' in station:
         atis_type = 'arr'
-    elif '_D' in ident:
+    elif '_D' in station:
         atis_type = 'dep'
 
-    atis_info = []
+    atis_info = ['D-ATIS NOT AVBL', '']
     if 'error' in atis_data:
         return atis_info
-    
-    for n in range(0, len(atis_data)):
-        if atis_data[n]['airport'] != ident[0:4]:
+
+    datis = ''
+    for a in atis_data:
+        if a['airport'] != station[0:4] or a['type'] != atis_type:
             continue
-        if atis_data[n]['type'] != atis_type:
-            continue
-        
-        # Strip beginning and ending D-ATIS text
-        datis = atis_data[n]['datis']
-        datis = re.sub('.*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ', '', datis)
-        datis = '. '.join(datis.split('. ')[1:])
-        datis = re.sub(' ...ADVS YOU HAVE.*', '', datis)
-        datis = datis.replace('NOTICE TO AIR MISSIONS, NOTAMS. ', 'NOTAMS... ') \
-            .replace('NOTICE TO AIR MISSIONS. ', 'NOTAMS... ')
+        datis = a['datis']
 
-        # Replace defined replacements
-        for r in replacements:
-            if '%r' in replacements[r]:
-                datis = re.sub(r + '[,.;]{0,2}', replacements[r].replace('%r', ''), datis)
-            else:
-                datis = re.sub(r + '[,.;]{0,2}', replacements[r], datis)
-        datis = re.sub(r'\s+', ' ', datis).strip()
+    if len(datis) == 0:
+        return atis_info
 
-        # Clean up D-ATIS
-        datis = datis.replace('...', '/./').replace('..', '.') \
-            .replace('/./', '...').replace('  ', ' ').replace(' . ', '. ') \
-            .replace(', ,', ',').replace(' ; ', '; ').replace(' .,', ' ,') \
-            .replace(' , ', ', ').replace('., ', ', ').replace('&amp;', '&') \
-            .replace(' ;.', '.').replace(' ;,', ',')
+    # Strip beginning and ending D-ATIS text
+    datis = re.sub('.*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ', '', datis)
+    datis = '. '.join(datis.split('. ')[1:])
+    datis = re.sub(' ...ADVS YOU HAVE.*', '', datis)
+    datis = datis.replace('NOTICE TO AIR MISSIONS, NOTAMS. ', 'NOTAMS... ') \
+        .replace('NOTICE TO AIR MISSIONS. ', 'NOTAMS... ') \
+        .replace('NOTICE TO AIR MEN. ', 'NOTAMS... ') \
+        .replace('NOTICE TO AIRMEN. ', 'NOTAMS... ')
 
-        # Replace contractions
-        contractions = get_contractions(ident, data)
-        for c, v in contractions.items():
-            if not c.isdigit():
-                datis = re.sub(r'(?<!@)\b' + c + r'\b,', v + ',', datis)
-                datis = re.sub(r'(?<!@)\b' + c + r'\b\.', v + '.', datis)
-                datis = re.sub(r'(?<!@)\b' + c + r'\b ', v + ' ', datis)
-                datis = re.sub(r'(?<!@)\b' + c + r'\b;', v + ';', datis)
-
-        # Split at NOTAMs
-        if 'NOTAMS' in datis:
-            atis_info = datis.split('NOTAMS... ')
+    # Replace defined replacements
+    for r in replacements:
+        if '%r' in replacements[r]:
+            datis = re.sub(r + '[,.;]{0,2}', replacements[r].replace('%r', ''), datis)
         else:
-            atis_info = [datis, '']
+            datis = re.sub(r + '[,.;]{0,2}', replacements[r], datis)
+    datis = re.sub(r'\s+', ' ', datis).strip()
+
+    # Clean up D-ATIS
+    datis = datis.replace('...', '/./').replace('..', '.') \
+        .replace('/./', '...').replace('  ', ' ').replace(' . ', '. ') \
+        .replace(', ,', ',').replace(' ; ', '; ').replace(' .,', ' ,') \
+        .replace(' , ', ', ').replace('., ', ', ').replace('&amp;', '&') \
+        .replace(' ;.', '.').replace(' ;,', ',')
+
+    # Replace contractions
+    contractions = await get_contractions(station)
+    for c, v in contractions.items():
+        if not c.isdigit():
+            datis = re.sub(r'(?<!@)\b' + c + r'\b,', v + ',', datis)
+            datis = re.sub(r'(?<!@)\b' + c + r'\b\.', v + '.', datis)
+            datis = re.sub(r'(?<!@)\b' + c + r'\b ', v + ' ', datis)
+            datis = re.sub(r'(?<!@)\b' + c + r'\b;', v + ';', datis)
+
+    # Split at NOTAMs
+    if 'NOTAMS... ' in datis:
+        atis_info = datis.split('NOTAMS... ')
+    else:
+        atis_info = [datis, '']
     
     return atis_info
 
-async def load_atis(station, stations, data, atis_data, atis_replacements, connect=True):
-    left_pad = await get_station_position(station, stations)
+async def get_atis_statuses():
+    await try_websocket()
     
-    if left_pad == -1:
-        return 0
+    data = {}
     
-    station_data = {}
-    for elem in data['stations']:
-        if station[0:4] in elem['identifier']:
-            if len(station) == 4:
-                station_data = elem
-                break
-            elif (station[5] == 'D' and elem['atisType'] == 'Departure') or \
-                (station[5] == 'A' and elem['atisType'] == 'Arrival'):
-                station_data = elem
-                break
+    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+        for s, i in (await get_datis_stations()).items():
+            await websocket.send(json.dumps({'type': 'getAtis', 'value': {'id': i}}))
+            
+            m = json.loads(await websocket.recv())['value']
+            data[s] = m['networkConnectionStatus']
+        return data
 
-    # Make sure profile has D-ATIS preset
-    if 'presets' not in station_data:
-        return 0
-    elif len(station_data['presets']) == 0:
-        return 0
-    elif station_data['presets'][0]['name'] != 'D-ATIS':
-        return 0
+async def get_num_connections():
+    n = 0
+    for k, v in (await get_atis_statuses()).items():
+        if v == 'Connected':
+            n =+ 1
+    return n
 
-    # Select profile
-    click_xy([left_pad, 100], win)
+async def configure_atises(connected_only=False):
+    stations = await get_datis_stations()
+    replacements = get_atis_replacements(stations)
+    atis_data = get_datis_data()
 
-    # Select D-ATIS preset
-    click_xy([500, 500], win, d=0.1)
-    click_xy([500, 550], win, d=0.1)
-
-    # Add ATIS replacements
-    replacements = {}
-    if station[0:4] in atis_replacements:
-        replacements = atis_replacements[station[0:4]]
+    atis_statuses = await get_atis_statuses()
     
-    atis = get_datis(station, atis_data, data, replacements)
-    if len(atis) == 0:
-        atis = ['', '']
+    for s, i in stations.items():
+        if connected_only and atis_statuses[s] != 'Connected':
+            continue
+        
+        v = {'id': i, 'preset': 'D-ATIS'}
+        v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, replacements[s[0:4]])
+        
+        payload = {'type': 'configureAtis', 'value': v}
+        async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+            await websocket.send(json.dumps(payload))
+
+async def connect_atises():
+    stations = await get_datis_stations()
+    atis_statuses = await get_atis_statuses()
+    disconnected_atises = [k for k, v in atis_statuses.items() if v == 'Disconnected']
     
-    # Fill in AIRPORT CONDITIONS field
-    click_xy([335, 390], win)
-    pyautogui.hotkey('ctrl', 'a')
-    pyautogui.press('backspace')
-    pyperclip.copy(atis[0])
-    pyautogui.hotkey('ctrl', 'v')
-    click_xy([540, 295], win, d=0.1)
+    for s, i in stations.items():
+        if s not in disconnected_atises:
+            continue
+        
+        payload = {'type': 'connectAtis', 'value': {'id': i}}
+        async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+            await websocket.send(json.dumps(payload))
 
-    # Fill in NOTAMS field
-    click_xy([940, 390], win)
-    pyautogui.hotkey('ctrl', 'a')
-    pyautogui.press('backspace')
-    pyperclip.copy(atis[1])
-    pyautogui.hotkey('ctrl', 'v')
-    pyperclip.copy('')
-    click_xy([1145, 295], win, d=0.1)
+            try:
+                m = await asyncio.wait_for(websocket.recv(), timeout=0.1)
+            except Exception as ignored:
+                pass
 
-    if len(atis[0]) == 0:
-        time.sleep(0.05)
-        return 0
+def open_vATIS():
+    # Set 'autoFetchAtisLetter' to True
+    config_path = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\AppConfig.json'
+    try:
+        with open(config_path, 'r') as f:
+            data = json.load(f)
+            if 'autoFetchAtisLetter' in data:
+                data['autoFetchAtisLetter'] = True
+        with open(config_path, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception as ignored:
+        pass
 
-    con_i = 0
-    if connect:
-        # Automatically connect ATISes
-        click_xy([1070, 515], win, d=0.1)
-        x, y = pyautogui.position()
-        for i in range(0, 50):
-            c = pyautogui.pixel(x, y)
-            if c[0] == 0 and c[1] == 70 and c[2] == 150:
-                con_i = 1
-                break
-            time.sleep(0.05)
+    # Check if vATIS is open
+    for process in psutil.process_iter(['name']):
+        if process.info['name'] == 'vATIS.exe':
+            return
 
-    print(f'{station} is now loaded.')
-    time.sleep(0.05)
-    
-    return con_i
+    exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
+    subprocess.Popen(exe);
 
-if RUN_UPDATE:
-    update_vATISLoad()
+async def main():
+    if RUN_UPDATE:
+        update_vATISLoad()
 
-active_profile = determine_active_profile()
-if len(active_profile) == 0:
-    print('Active profile not found.')
-    time.sleep(10)
-    sys.exit()
+    open_vATIS()
+    await configure_atises()
+    await connect_atises()
 
-# Open vATIS and select first profile
-atis_data = open_vATIS()
-pyautogui.PAUSE = 0.0001
-win = get_win('vATIS.exe', 'vATIS Profiles')
-if True:
-    # Suppress mouse movements
-    mouse_listener = pynput.mouse.Listener()
-    def on_move(x,y):
-        mouse_listener.suppress_event()
-    mouse_listener.on_move = on_move
-    mouse_listener.start()
-    
-    click_xy([0, 0], win)
-    pyautogui.press('tab')
+    while True:
+        time.sleep(60)
+        await configure_atises(connected_only=True)
 
-    # Select active profile
-    for i in range(0, get_active_profile_position(active_profile)):
-        pyautogui.press('down')
-    pyautogui.press('enter')
-    with pyautogui.hold('shift'):
-        pyautogui.press('tab', presses=5)
-    pyautogui.press('enter')
-    
-    mouse_listener.stop()
-
-data = read_profile(active_profile)
-stations = get_stations(data)
-
-# Bring window to front
-win = get_win('vATIS.exe', 'vATIS')
-
-# Get ATIS replacements
-atis_replacements = get_atis_replacements(stations)
-
-t0 = time.time()
-for i in range(0, 30):
+if __name__ == "__main__":
     # Use first line for Desktop, second line for Jupyter
-    num_online_atises = len(asyncio.run(get_online_atises()))
-    # num_online_atises = len(await get_online_atises())
-    
-    if num_online_atises > 0:
-        time.sleep(0.75)
-        break
-
-    time.sleep(.05)
-
-# Load ATIS information
-i = 0
-for station in stations:
-    connect = True
-    if i > 3: 
-        connect = False
-
-    # Suppress mouse movements
-    mouse_listener = pynput.mouse.Listener()
-    def on_move(x,y):
-        mouse_listener.suppress_event()
-    mouse_listener.on_move = on_move
-    mouse_listener.start()
-
-    # Use first line for Desktop, second line for Jupyter
-    i += asyncio.run(load_atis(station, stations, data, atis_data, atis_replacements, connect))
-    # i += await load_atis(station, stations, data, atis_data, atis_replacements, connect)
-    
-    mouse_listener.stop()
+    asyncio.run(main())
+    # await main()
