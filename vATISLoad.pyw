@@ -281,8 +281,12 @@ async def configure_atises(connected_only=False):
         if connected_only and atis_statuses[s] != 'Connected':
             continue
         
+        rep = []
+        if s[0:4] in replacements:
+            rep = replacements[s[0:4]]
+        
         v = {'id': i, 'preset': 'D-ATIS'}
-        v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, replacements[s[0:4]])
+        v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
         
         payload = {'type': 'configureAtis', 'value': v}
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
