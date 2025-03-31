@@ -1,23 +1,4 @@
 {
-    "facility-patches":
-    {
-        "MIA": "ZMA",
-        "TPA": "ZMA",
-        "FLL": "ZMA",
-        "PBI": "ZMA",
-        "RSW": "ZMA",
-        "NCT": "ZOA",
-        "SFO": "ZOA",
-        "OAK": "ZOA",
-        "SJC": "ZOA",
-        "SMF": "ZOA",
-        "RNO": "ZOA",
-        "P50": "ZAB",
-        "PHX": "ZAB",
-        "ABQ": "ZAB",
-        "ELP": "ZAB",
-        "ATL": "A80"
-    },
     "replacements":
     {
         "KMIA":
@@ -51,7 +32,8 @@
             "VKZ VOR OTS": "",
             "CHECK NOTAMS FOR TFR": "",
             "UAS ACTIVITY REPORTED, UAS IN THE VICINITY OF THE AIRPORT": "",
-            "ATTENTION ALL DEPARTURES, NORTH DEPARTURE FREQUENCY IS 126.85.": ""
+            "ATTENTION ALL DEPARTURES, NORTH DEPARTURE FREQUENCY IS 126.85.": "",
+            "FREQ 119.45 OTS": ""
         },
         "KFLL":
         {
@@ -214,8 +196,6 @@
             "CRANE .\\d{1,2} MILES \\w{1,} OF RENO AIRPORT \\d{1,5} FEET AGL": "%r",
             "CRANE .\\d{1,2} MILES \\w{1,} OF RUNWAY \\d{1,2}[LR]? APPROACH END \\d{1,5} FEET AGL": "%r",
             "LASER \\w{1,} OF THE AIRPORT, AT \\d{1,5} FEET \\w{1,} LASER, FROM THE \\w{1,}": "%r",
-            "MODERATE TURBULENCE RPTD BELOW \\d{1,5}": "%r",
-            "SEVERE TURBULENCE RPTD BELOW \\d{1,5}": "%r",
             "UNAUTH LASER ILLUM EVENT": "",
             "USE CAUTION FOR WIDE SPREAD GLIDER SOARING OPERATIONS": ""
         }
