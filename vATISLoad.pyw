@@ -23,7 +23,6 @@ import requests, websockets, psutil
 RUN_UPDATE = True
 SHUTDOWN_LIMIT = 60 * 5
 
-
 def update_vATISLoad():
     online_file = ''
     url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoad.pyw'
@@ -307,6 +306,23 @@ async def connect_atises():
             except Exception as ignored:
                 pass
 
+def kill_open_instances():
+    prev_instances = {}
+
+    for q in psutil.process_iter():
+        if 'python' in q.name():
+            for parameter in q.cmdline():
+                if 'vATISLoad' in parameter and parameter.endswith('.pyw'):
+                    q_create_time = q.create_time()
+                    q_create_datetime = datetime.fromtimestamp(q_create_time)
+                    prev_instances[q.pid] = {'process': q, 'start': q_create_datetime}
+    
+    prev_instances = dict(sorted(prev_instances.items(), key=lambda item: item[1]['start']))
+    
+    for i in range(0, len(prev_instances) - 1):
+        k = list(prev_instances.keys())[i]
+        prev_instances[k]['process'].terminate()
+
 def open_vATIS():
     # Set 'autoFetchAtisLetter' to True
     config_path = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\AppConfig.json'
@@ -332,6 +348,7 @@ async def main():
     if RUN_UPDATE:
         update_vATISLoad()
 
+    kill_open_instances()
     open_vATIS()
     await configure_atises()
     await connect_atises()
