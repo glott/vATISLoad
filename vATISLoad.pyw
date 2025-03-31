@@ -1,6 +1,14 @@
 #####################################################################
 ############################# vATISLoad #############################
 #####################################################################
+
+DISABLE_AUTOCONNECT = False     # Set to True to disable auto-connect
+DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
+RUN_UPDATE = True               # Set to False for testing
+SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
+
+#####################################################################
+
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
 from datetime import datetime
 
@@ -19,10 +27,6 @@ os.system('cls')
 
 import requests, websockets, psutil
 
-# Set to False for testing
-RUN_UPDATE = True
-SHUTDOWN_LIMIT = 60 * 5
-
 def update_vATISLoad():
     online_file = ''
     url = 'https://raw.githubusercontent.com/glott/vATISLoad/refs/heads/main/vATISLoad.pyw'
@@ -35,7 +39,9 @@ def update_vATISLoad():
     with open(sys.argv[0], 'r') as FileObj:
         i = 0
         for line in FileObj:
-            if i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
+            if ('DISABLE_AUTOCONNECT =' in line or 'DISABLE_AUTOUPDATE =' in line) and i < 10:
+                pass
+            elif i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
                 up_to_date = False
                 break
             i += 1
@@ -280,7 +286,7 @@ async def configure_atises(connected_only=False):
     for s, i in stations.items():
         if connected_only and atis_statuses[s] != 'Connected':
             continue
-        
+
         rep = []
         if s[0:4] in replacements:
             rep = replacements[s[0:4]]
@@ -355,9 +361,10 @@ async def main():
     kill_open_instances()
     open_vATIS()
     await configure_atises()
-    await connect_atises()
+    if not DISABLE_AUTOCONNECT:
+        await connect_atises()
 
-    while True:
+    while not DISABLE_AUTOUPDATE:
         for i in range(0, 15):
             await try_websocket()
             time.sleep(60)
