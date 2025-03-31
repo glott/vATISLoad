@@ -72,7 +72,7 @@ async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT):
         t1 = time.time()
         if t1 - t0 > limit:
             os.system('cmd /K \"cls & echo vATIS closed or vATIS profile has not been selected.' + \
-                ' & echo Exiting vATISLoad. & timeout 3 & exit\"')
+                ' & echo Exiting vATISLoad. & timeout 5 & exit\"')
             if shutdown:
                 sys.exit()
             return
