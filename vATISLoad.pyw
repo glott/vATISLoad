@@ -150,14 +150,15 @@ async def get_current_profile_data():
                 if p['name'] == 'D-ATIS':
                     profile_datis_stations.append(s['identifier'])
                     break
-    
-        if sorted(profile_datis_stations) == stations:
-            return data, profile_datis_stations
 
-    return data, []
+        profile_datis_stations.sort()
+        if profile_datis_stations == stations:
+            return data
+
+    return data
     
 async def get_contractions(station):
-    data = (await get_current_profile_data())[0]
+    data = await get_current_profile_data()
 
     c = {}
     station_data = {}
@@ -179,8 +180,14 @@ async def get_contractions(station):
     return c
 
 def get_datis_data():
-    url = 'https://datis.clowd.io/api/all'
-    return json.loads(requests.get(url).text)
+    data = {}
+    try:
+        url = 'https://datis.clowd.io/api/all'
+        data =  json.loads(requests.get(url, timeout=2.5).text)
+    except Exception as ignored:
+        os.system('cmd /K \"cls & echo Unable to fetch D-ATIS data. & timeout 5 & exit\"')
+    
+    return data
 
 async def get_datis(station, atis_data, replacements):
     atis_type = 'combined'
@@ -254,7 +261,8 @@ async def get_atis_statuses():
             
             m = json.loads(await websocket.recv())['value']
             data[s] = m['networkConnectionStatus']
-        return data
+    
+    return data
 
 async def get_num_connections():
     n = 0
@@ -329,7 +337,10 @@ async def main():
     await connect_atises()
 
     while True:
-        time.sleep(60)
+        for i in range(0, 15):
+            await try_websocket()
+            time.sleep(60)
+            
         await configure_atises(connected_only=True)
 
 if __name__ == "__main__":
