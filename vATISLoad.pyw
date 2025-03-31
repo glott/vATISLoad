@@ -39,8 +39,8 @@ def update_vATISLoad():
     with open(sys.argv[0], 'r') as FileObj:
         i = 0
         for line in FileObj:
-            if ('DISABLE_AUTOCONNECT =' in line or 'DISABLE_AUTOUPDATES =' in line or \
-               or 'RUN_UPDATE =' in line or 'SHUTDOWN_LIMIT =' in line) and i < 10:
+            if ('DISABLE_AUTOCONNECT =' in line or 'DISABLE_AUTOUPDATES =' in line or 
+                'RUN_UPDATE =' in line or 'SHUTDOWN_LIMIT =' in line) and i < 10:
                 pass
             elif i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
                 up_to_date = False
