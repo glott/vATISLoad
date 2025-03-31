@@ -4,19 +4,23 @@ _by Josh Glottmann_
 
 **Version 1.4.0** - 03/30/2025
 
-Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.app/) by [Justin Shannon](https://github.com/JustinShannon)
+Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.app/) by [Justin Shannon](https://github.com/JustinShannon). D-ATIS data is automatically uplinked to vATIS after selecting a profile and gets refreshed every 15 minutes. 
 
 __[Download v1.4.0](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.pyw)__ 
 
-### Usage
+### Installation
 
 1) Download and install the latest version of [Python](https://www.python.org/downloads/).
-2) Launch `vATISLoad.pyw`.
-3) Select a profile in vATIS.
-4) vATISLoad will automatically connect airports with a D-ATIS on initial load.
-5) vATISLoad will automatically refresh D-ATIS information every minute until vATIS is shutdown.
+2) Launch `vATISLoad.pyw` to download all required libraries.
 
 \* _Note: the first time you run vATISLoad, it may take a few minutes to download the required packages to make the script run properly._
+
+### Usage
+1) Open CRC and connect to the network.
+2) Launch `vATISLoad.pyw`.
+3) Select a profile in vATIS.
+4) Wait while vATIS automatically uplinks D-ATIS data and attempts to connect your ATISes.
+5) vATISLoad will automatically refresh D-ATIS data every 15 minutes until vATIS is shutdown.
 
 ###  Replacements
 
