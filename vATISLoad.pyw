@@ -356,6 +356,23 @@ def open_vATIS():
     exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
     subprocess.Popen(exe);
 
+async def disconnect_over_connection_limit(delay=True):
+    if True:
+        time.sleep(10)
+    
+    stations = await get_datis_stations()
+    atis_statuses = await get_atis_statuses()
+    connected_atises = [k for k, v in atis_statuses.items() if v == 'Connected']
+
+    if len(connected_atises) <= 4 or SHUTDOWN_LIMIT == 346:
+        return
+
+    for i in range(4, len(connected_atises)):
+        s, i = connected_atises[i], stations[connected_atises[i]]
+        payload = {'type': 'disconnectAtis', 'value': {'id': i}}
+        async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+            await websocket.send(json.dumps(payload))
+
 async def main():
     if RUN_UPDATE:
         update_vATISLoad()
@@ -365,6 +382,7 @@ async def main():
     await configure_atises()
     if not DISABLE_AUTOCONNECT:
         await connect_atises()
+        await disconnect_over_connection_limit()
 
     while not DISABLE_AUTOUPDATES:
         for i in range(0, 15):
