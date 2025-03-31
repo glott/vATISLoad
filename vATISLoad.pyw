@@ -366,7 +366,7 @@ async def main():
     if not DISABLE_AUTOCONNECT:
         await connect_atises()
 
-    while not DISABLE_AUTOUPDATE:
+    while not DISABLE_AUTOUPDATES:
         for i in range(0, 15):
             await try_websocket()
             time.sleep(60)
