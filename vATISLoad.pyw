@@ -82,14 +82,14 @@ async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT):
                 try:
                     await asyncio.wait_for(websocket.recv(), timeout=1)
                     if time.time() - t0 > 5:
-                        time.sleep(1)
+                        await asyncio.sleep(1)
                     return
                 except Exception as ignored:
                     pass
         except Exception as ignored:
             dt = time.time() - t1
             if dt < 1:
-                time.sleep(1 - dt)
+                await asyncio.sleep(1 - dt)
             pass
 
 async def get_datis_stations():
