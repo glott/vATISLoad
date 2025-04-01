@@ -295,6 +295,9 @@ async def configure_atises(connected_only=False):
         
         v = {'id': i, 'preset': 'D-ATIS'}
         v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
+
+        if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL':
+            continue
         
         payload = {'type': 'configureAtis', 'value': v}
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
