@@ -143,6 +143,7 @@
             "\\d{1,2} MILES \\w{1,} RWY \\d{1,2}[LR]?, \\w{1,} LASER, FROM THE \\w{1,}": "%r",
             "\\d{1,2} MILES \\w{1,}, \\w{1,} LASER": "%r",
             "FLOW TO ([A-Z]{3}\\, ){1,}[A-Z]{3}": "%r",
+            "FLOW TO ([A-Z]{3}\\, ){1,}[A-Z]{3} FOR \\w{3,}": "%r",
             "FLOW TO ([A-Z]{3})": "%r",
             "GROUND DELAY PROGRAM TO COLORADO SKI COUNTRY AIRPORTS": "",
             "GROUND DELAY TO ALL OF COLORADO AND MEXICO EXPECT LONG DELAYS": "",
