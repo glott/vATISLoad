@@ -79,9 +79,12 @@ async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT):
             async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
                 await websocket.send(json.dumps({'type': 'getStations'}))
                 try:
-                    await asyncio.wait_for(websocket.recv(), timeout=1)
+                    m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=1))
                     if time.time() - t0 > 5:
                         await asyncio.sleep(1)
+                    if m['type'] != 'stations':
+                        await asyncio.sleep(0.5)
+                        continue
                     return
                 except Exception as ignored:
                     pass
@@ -97,9 +100,21 @@ async def get_datis_stations():
     data = {}
     async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
         await websocket.send(json.dumps({'type': 'getStations'}))
-        stations = json.loads(await websocket.recv())['stations']
+        m = json.loads(await websocket.recv())
+        
+        not_stations = False
+        while m['type'] != 'stations':
+            not_stations = True
+            await asyncio.sleep(0.1)
+            await websocket.send(json.dumps({'type': 'getStations'}))
+            m = json.loads(await websocket.recv())
+        
+        if not_stations:
+            await asyncio.sleep(0.5)
+            await websocket.send(json.dumps({'type': 'getStations'}))
+            m = json.loads(await websocket.recv())
 
-        for s in stations:
+        for s in m['stations']:
             name = s['name']
 
             if s['atisType'] == 'Arrival':
