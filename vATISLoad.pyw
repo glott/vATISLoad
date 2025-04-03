@@ -2,7 +2,6 @@
 ############################# vATISLoad #############################
 #####################################################################
 
-DISABLE_AUTOCONNECT = False     # Set to True to disable auto-connect
 DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
 RUN_UPDATE = True               # Set to False for testing
 SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
@@ -10,7 +9,7 @@ SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
 #####################################################################
 
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 
 import importlib.util as il
 if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil')]:
@@ -39,8 +38,8 @@ def update_vATISLoad():
     with open(sys.argv[0], 'r') as FileObj:
         i = 0
         for line in FileObj:
-            if ('DISABLE_AUTOCONNECT =' in line or 'DISABLE_AUTOUPDATES =' in line or 
-                'RUN_UPDATE =' in line or 'SHUTDOWN_LIMIT =' in line) and i < 10:
+            if ('DISABLE_AUTOUPDATES =' in line or 'RUN_UPDATE =' in line 
+                or 'SHUTDOWN_LIMIT =' in line) and i < 10:
                 pass
             elif i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
                 up_to_date = False
@@ -303,10 +302,90 @@ async def configure_atises(connected_only=False):
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
             await websocket.send(json.dumps(payload))
 
+def determine_position_from_id(positions, position_id):
+    for p in positions:
+        if p['id'] == position_id:
+            c = p['callsign']
+            idx1 = c.find('_')
+            idx2 = c.rfind('_')
+        
+            if idx1 == -1 or idx2 == -1:
+                return None
+        
+            prefix = c[:idx1]
+            suffix = c[idx2 + 1:]
+            return [prefix, suffix]
+    
+    return None
+
+def determine_active_callsign():
+    crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
+    crc_name = ''
+    crc_data = {}
+    crc_lastused_time = '2020-01-01T08:00:00'
+    try:
+        for filename in os.listdir(crc_profiles):
+            if filename.endswith('.json'): 
+                file_path = os.path.join(crc_profiles, filename)
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
+                    if 'LastUsedAt' not in data or data['LastUsedAt'] == None:
+                        continue
+                    dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
+                    if dt2 > dt1:
+                        crc_lastused_time = data['LastUsedAt'].split('.')[0]
+                        crc_name = data['Name']
+                        crc_data = data
+    except Exception as ignored:
+        return None
+
+    crc_lastused_time = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc)
+    dt_now_lastused = datetime.now(timezone.utc) - crc_lastused_time
+    if dt_now_lastused.total_seconds() / 3600 >= 2:
+        return None
+
+    try:
+        lastPos = crc_data['LastUsedPositionId']
+        crc_ARTCC = os.getenv('LOCALAPPDATA') + '\\CRC\\ARTCCs\\' + crc_data['ArtccId'] + '.json'
+        with open(crc_ARTCC, 'r') as f:
+            data = json.load(f)
+
+        pos = determine_position_from_id(data['facility']['positions'], lastPos)
+        if pos is not None:
+            return pos
+
+        for child1 in data['facility']['childFacilities']:
+            pos = determine_position_from_id(child1['positions'], lastPos)
+            if pos is not None:
+                return pos
+            
+            for child2 in child1['childFacilities']:
+                pos = determine_position_from_id(child2['positions'], lastPos)
+                if pos is not None:
+                    return pos
+                
+    except Exception as ignored:
+        pass
+
+    return None
+
 async def connect_atises():
     stations = await get_datis_stations()
     atis_statuses = await get_atis_statuses()
     disconnected_atises = [k for k, v in atis_statuses.items() if v == 'Disconnected']
+
+    active_callsign = determine_active_callsign()
+    if active_callsign is not None:
+        suf = active_callsign[1]
+        if suf == 'TWR' or suf == 'GND' or suf == 'DEL' or suf == 'RMP':
+            select_atis = []
+            for da in disconnected_atises:
+                if active_callsign[0] in da:
+                    select_atis.append(da)
+
+            if len(select_atis) > 0:
+                disconnected_atises = select_atis
     
     for s, i in stations.items():
         if s not in disconnected_atises:
@@ -383,9 +462,8 @@ async def main():
     kill_open_instances()
     open_vATIS()
     await configure_atises()
-    if not DISABLE_AUTOCONNECT:
-        await connect_atises()
-        await disconnect_over_connection_limit()
+    await connect_atises()
+    await disconnect_over_connection_limit()
 
     while not DISABLE_AUTOUPDATES:
         for i in range(0, 15):
