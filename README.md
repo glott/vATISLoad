@@ -36,3 +36,27 @@ __[Download v1.4.2](https://github.com/glott/vATISLoad/releases/latest/download/
 - Replacements occur before any contractions are replaced in the text. 
 
 - Submit a pull request to add additional replacement data.
+
+### Troubleshooting
+
+- Is the script doing nothing the first time you run it?
+  - It is likely installing required libraries to run. You will see a popup the first time this happens. If you don't see a popup, that means the required libraries are installed.
+ 
+- Is vATIS being opened automatically by the script?
+  - If yes, then that's a good sign!
+ 
+- If vATIS was opened automatically, did you select a profile?
+  - You must select a profile for D-ATIS information to be uplinked.
+ 
+- If you selected a profile, does each D-ATIS airport have a preset named `D-ATIS`?
+  - Each airport much have a `D-ATIS` preset where information is uplinked to.
+
+- If D-ATIS information was uplinked, did your ATISes connect?
+  - If yes, then you're all set! If no, make sure you have an active connection in CRC. 
+
+- For futher troubleshooting, try the following steps:
+
+  1. Quit vATIS
+  2. Rename `vATISLoad.pyw` to `vATISLoad.py` (dropping the `w`). If you can’t see the file extension, open the `View` menu in File Explorer then tick `File name extensions` in the `Show/hide` section.
+  3. Open `Command Prompt` and drag the `vATISLoad.py` file into it, press enter to run it. If vATIS opens automatically, select whichever profile has your D-ATIS airports.
+  4. Send Josh a screenshot of `Command Prompt` after following these steps. 
