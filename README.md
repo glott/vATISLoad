@@ -10,7 +10,7 @@ __[Download v1.4.2](https://github.com/glott/vATISLoad/releases/latest/download/
 
 ### Installation
 
-1) Download and install the latest version of [Python](https://www.python.org/downloads/).
+1) Download and install the latest version of [Python](https://www.python.org/downloads/). Select `Add python.exe to PATH` when installing Python.
 2) Launch `vATISLoad.pyw` to download all required libraries.
 3) Add a `D-ATIS` preset to each airport that you would like D-ATIS data uplinked to. If this preset does not exist, no information will be uplinked. 
 
