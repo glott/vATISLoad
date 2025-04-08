@@ -232,7 +232,8 @@ async def get_datis(station, atis_data, replacements):
 
     # Strip beginning and ending D-ATIS text
     datis = re.sub('.*INFO [A-Z] [0-9][0-9][0-9][0-9]Z. ', '', datis)
-    datis = '. '.join(datis.split('. ')[1:])
+    wx_buffer = 0 if len(datis.split('. ')[0]) > 4 else 1
+    datis = '. '.join(datis.split('. ')[1 + wx_buffer:])
     datis = re.sub(' ...ADVS YOU HAVE.*', '', datis)
     datis = datis.replace('NOTICE TO AIR MISSIONS, NOTAMS. ', 'NOTAMS... ') \
         .replace('NOTICE TO AIR MISSIONS. ', 'NOTAMS... ') \
