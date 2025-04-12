@@ -9,7 +9,7 @@ SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
 #####################################################################
 
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
-from datetime import datetime, timezone
+from datetime import datetime
 
 import importlib.util as il
 if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil')]:
@@ -352,11 +352,6 @@ def determine_active_callsign():
                         crc_name = data['Name']
                         crc_data = data
     except Exception as ignored:
-        return None
-
-    crc_lastused_time = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc)
-    dt_now_lastused = datetime.now(timezone.utc) - crc_lastused_time
-    if dt_now_lastused.total_seconds() / 3600 >= 2:
         return None
 
     try:
