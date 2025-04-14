@@ -5,6 +5,7 @@
 DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
 RUN_UPDATE = True               # Set to False for testing
 SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
+AUTO_SELECT_FACILITY = True     # Enable/disable auto-select facility
 
 #####################################################################
 
@@ -12,7 +13,8 @@ import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
 from datetime import datetime
 
 import importlib.util as il
-if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil')]:
+if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil'), 
+            il.find_spec('pygetwindow')]:
 
     os.system('cmd /K \"cls & echo Updating required packages for vATISLoad.' + \
         ' & echo Please wait a few minutes for packages to install. & timeout 5 & exit\"')
@@ -21,10 +23,11 @@ if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'websockets']);
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
 
 os.system('cls')
 
-import requests, websockets, psutil
+import requests, websockets, psutil, pygetwindow
 
 def update_vATISLoad():
     online_file = ''
@@ -39,7 +42,7 @@ def update_vATISLoad():
         i = 0
         for line in FileObj:
             if ('DISABLE_AUTOUPDATES =' in line or 'RUN_UPDATE =' in line 
-                or 'SHUTDOWN_LIMIT =' in line) and i < 10:
+                or 'SHUTDOWN_LIMIT =' in line or 'AUTO_SELECT_FACILITY' in line) and i < 10:
                 pass
             elif i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
                 up_to_date = False
@@ -65,9 +68,132 @@ def update_vATISLoad():
 
     os.execv(sys.executable, ['python'] + sys.argv)
 
-async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT):
+def determine_active_callsign(return_artcc_only=False):
+    crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
+    crc_name = ''
+    crc_data = {}
+    crc_lastused_time = '2020-01-01T08:00:00'
+    try:
+        for filename in os.listdir(crc_profiles):
+            if filename.endswith('.json'): 
+                file_path = os.path.join(crc_profiles, filename)
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
+                    if 'LastUsedAt' not in data or data['LastUsedAt'] == None:
+                        continue
+                    dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
+                    if dt2 > dt1:
+                        crc_lastused_time = data['LastUsedAt'].split('.')[0]
+                        crc_name = data['Name']
+                        crc_data = data
+    except Exception as ignored:
+        return None
+
+    if return_artcc_only:
+        return crc_data['ArtccId']
+
+    try:
+        lastPos = crc_data['LastUsedPositionId']
+        crc_ARTCC = os.getenv('LOCALAPPDATA') + '\\CRC\\ARTCCs\\' + crc_data['ArtccId'] + '.json'
+        with open(crc_ARTCC, 'r') as f:
+            data = json.load(f)
+
+        pos = determine_position_from_id(data['facility']['positions'], lastPos)
+        if pos is not None:
+            return pos
+
+        for child1 in data['facility']['childFacilities']:
+            pos = determine_position_from_id(child1['positions'], lastPos)
+            if pos is not None:
+                return pos
+            
+            for child2 in child1['childFacilities']:
+                pos = determine_position_from_id(child2['positions'], lastPos)
+                if pos is not None:
+                    return pos
+                
+    except Exception as ignored:
+        pass
+
+    return None
+
+async def auto_select_facility():
+    if not AUTO_SELECT_FACILITY:
+        return
+
+    # Determine if CRC is open and a profile is loaded
+    if 'CRC : 1' not in [w.title for w in pygetwindow.getAllWindows()]:
+        return
+
+    artcc = determine_active_callsign(return_artcc_only=True)
+    if artcc is None:
+        return
+
+    # Determine if vATIS profile matches ARTCC
+    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
+    match_id = ''
+    profile_station_ids = {}
+    try:
+        for filename in os.listdir(vatis_profiles):
+            if not filename.endswith('.json'): 
+                continue
+            
+            file_path = os.path.join(vatis_profiles, filename)
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                name, id = data['name'], data['id']
+                if artcc in name:
+                    match_id = id
+                    
+                profile_station_ids[id] = [s['id'] for s in data['stations']]       
+        
+        if len(match_id) < 0:
+            return
+
+        async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+            # Determine if profile is already loaded
+            m = ''
+            try:
+                await websocket.send(json.dumps({'type': 'getStations'}))
+                m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))
+            except asyncio.TimeoutError:
+                pass
+
+            disconnected = False
+            if len(m) != 0:
+                station_ids = [s['id'] for s in m['stations']]
+                
+                # Do not select a profile if current profile is already selected
+                for p, ids in profile_station_ids.items():
+                    if set(ids) == set(station_ids):
+                        if p == match_id:
+                            return
+
+                # Disconnect ATISes if any are online
+                for s_id in station_ids:
+                    await websocket.send(json.dumps({'type': 'getAtis', 'value': {'id': s_id}}))
+                    m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))
+                
+                    if m['value']['networkConnectionStatus'] == 'Connected':
+                        await websocket.send(json.dumps({'type': 'disconnectAtis', 'value': {'id': s_id}}))
+                        disconnected = True
+            
+            # Load new profile
+            await websocket.send(json.dumps({'type': 'loadProfile', 'value': {'id': match_id}}))
+
+            if disconnected:
+                await asyncio.sleep(1)
+    
+    except Exception as ignored:
+        pass
+
+async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT, initial=False):
     t0 = time.time()
     for i in range(0, 250):
+        if initial and i < 30:
+            await auto_select_facility()
+        
         t1 = time.time()
         if t1 - t0 > limit:
             os.system('cmd /K \"cls & echo vATIS closed or vATIS profile has not been selected.' + \
@@ -94,8 +220,8 @@ async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT):
                 await asyncio.sleep(1 - dt)
             pass
 
-async def get_datis_stations():
-    await try_websocket()
+async def get_datis_stations(initial=False):
+    await try_websocket(initial=initial)
     
     data = {}
     async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
@@ -291,8 +417,8 @@ async def get_num_connections():
             n =+ 1
     return n
 
-async def configure_atises(connected_only=False):
-    stations = await get_datis_stations()
+async def configure_atises(connected_only=False, initial=False):
+    stations = await get_datis_stations(initial=initial)
     replacements = get_atis_replacements(stations)
     atis_data = get_datis_data()
 
@@ -330,53 +456,6 @@ def determine_position_from_id(positions, position_id):
             suffix = c[idx2 + 1:]
             return [prefix, suffix]
     
-    return None
-
-def determine_active_callsign():
-    crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
-    crc_name = ''
-    crc_data = {}
-    crc_lastused_time = '2020-01-01T08:00:00'
-    try:
-        for filename in os.listdir(crc_profiles):
-            if filename.endswith('.json'): 
-                file_path = os.path.join(crc_profiles, filename)
-                with open(file_path, 'r') as f:
-                    data = json.load(f)
-                    dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
-                    if 'LastUsedAt' not in data or data['LastUsedAt'] == None:
-                        continue
-                    dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
-                    if dt2 > dt1:
-                        crc_lastused_time = data['LastUsedAt'].split('.')[0]
-                        crc_name = data['Name']
-                        crc_data = data
-    except Exception as ignored:
-        return None
-
-    try:
-        lastPos = crc_data['LastUsedPositionId']
-        crc_ARTCC = os.getenv('LOCALAPPDATA') + '\\CRC\\ARTCCs\\' + crc_data['ArtccId'] + '.json'
-        with open(crc_ARTCC, 'r') as f:
-            data = json.load(f)
-
-        pos = determine_position_from_id(data['facility']['positions'], lastPos)
-        if pos is not None:
-            return pos
-
-        for child1 in data['facility']['childFacilities']:
-            pos = determine_position_from_id(child1['positions'], lastPos)
-            if pos is not None:
-                return pos
-            
-            for child2 in child1['childFacilities']:
-                pos = determine_position_from_id(child2['positions'], lastPos)
-                if pos is not None:
-                    return pos
-                
-    except Exception as ignored:
-        pass
-
     return None
 
 async def connect_atises():
@@ -470,7 +549,7 @@ async def main():
 
     kill_open_instances()
     open_vATIS()
-    await configure_atises()
+    await configure_atises(initial=True)
     await connect_atises()
     await disconnect_over_connection_limit()
 
