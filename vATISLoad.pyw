@@ -3,9 +3,9 @@
 #####################################################################
 
 DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
-RUN_UPDATE = True               # Set to False for testing
 SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
-AUTO_SELECT_FACILITY = True     # Enable/disable auto-select facility
+AUTO_SELECT_FACILITY = False    # Enable/disable auto-select facility
+RUN_UPDATE = True               # Set to False for testing
 
 #####################################################################
 
@@ -119,15 +119,15 @@ def determine_active_callsign(return_artcc_only=False):
     return None
 
 async def auto_select_facility():
-    if not AUTO_SELECT_FACILITY:
+    artcc = determine_active_callsign(return_artcc_only=True)
+    if artcc is None:
+        return
+    
+    if not AUTO_SELECT_FACILITY and not artcc in ['ZOA', 'ZMA']:
         return
 
     # Determine if CRC is open and a profile is loaded
     if 'CRC : 1' not in [w.title for w in pygetwindow.getAllWindows()]:
-        return
-
-    artcc = determine_active_callsign(return_artcc_only=True)
-    if artcc is None:
         return
 
     # Determine if vATIS profile matches ARTCC
