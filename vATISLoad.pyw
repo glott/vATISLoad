@@ -3,7 +3,7 @@
 #####################################################################
 
 DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
-RUN_UPDATE = True               # Set to False for testing
+RUN_UPDATE = True              # Set to False for testing
 SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
 AUTO_SELECT_FACILITY = True     # Enable/disable auto-select facility
 
@@ -160,7 +160,6 @@ async def auto_select_facility():
             except asyncio.TimeoutError:
                 pass
 
-            disconnected = False
             if len(m) != 0:
                 station_ids = [s['id'] for s in m['stations']]
                 
@@ -177,13 +176,10 @@ async def auto_select_facility():
                 
                     if m['value']['networkConnectionStatus'] == 'Connected':
                         await websocket.send(json.dumps({'type': 'disconnectAtis', 'value': {'id': s_id}}))
-                        disconnected = True
             
             # Load new profile
             await websocket.send(json.dumps({'type': 'loadProfile', 'value': {'id': match_id}}))
-
-            if disconnected:
-                await asyncio.sleep(1)
+            await asyncio.sleep(1)
     
     except Exception as ignored:
         pass
