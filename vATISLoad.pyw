@@ -462,6 +462,7 @@ async def connect_atises():
     stations = await get_datis_stations()
     atis_statuses = await get_atis_statuses()
     disconnected_atises = [k for k, v in atis_statuses.items() if v == 'Disconnected']
+    n_connected = len([k for k, v in atis_statuses.items() if v == 'Connected'])
 
     active_callsign = determine_active_callsign()
     if active_callsign is not None:
@@ -474,8 +475,12 @@ async def connect_atises():
 
             if len(select_atis) > 0:
                 disconnected_atises = select_atis
-    
+
+    n = 0
     for s, i in stations.items():
+        if n + n_connected >= 4:
+            break
+        
         if s not in disconnected_atises:
             continue
         
@@ -485,6 +490,7 @@ async def connect_atises():
 
             try:
                 m = await asyncio.wait_for(websocket.recv(), timeout=0.1)
+                n += 1
             except Exception as ignored:
                 pass
 
@@ -528,7 +534,7 @@ def open_vATIS():
 
 async def disconnect_over_connection_limit(delay=True):
     if True:
-        time.sleep(10)
+        time.sleep(5)
     
     stations = await get_datis_stations()
     atis_statuses = await get_atis_statuses()
