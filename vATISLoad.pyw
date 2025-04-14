@@ -3,7 +3,7 @@
 #####################################################################
 
 DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
-RUN_UPDATE = True              # Set to False for testing
+RUN_UPDATE = True               # Set to False for testing
 SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
 AUTO_SELECT_FACILITY = True     # Enable/disable auto-select facility
 
