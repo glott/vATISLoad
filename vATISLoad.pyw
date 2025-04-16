@@ -464,13 +464,12 @@ async def connect_atises():
     if active_callsign is not None:
         suf = active_callsign[1]
         if suf == 'TWR' or suf == 'GND' or suf == 'DEL' or suf == 'RMP':
-            select_atis = []
+            stations_temp = {}
             for da in disconnected_atises:
-                if active_callsign[0] in da:
-                    select_atis.append(da)
-
-            if len(select_atis) > 0:
-                disconnected_atises = select_atis
+                if active_callsign[0] in da and da in stations:
+                    stations_temp[da] = stations[da]
+            
+            stations = stations_temp
 
     n = 0
     for s, i in stations.items():
