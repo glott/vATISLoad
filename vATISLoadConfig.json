@@ -57,8 +57,7 @@
             "TWR FREQ IS 119.3, CTC CD ON 121.4": "",
             "TWR FREQ IS 120.2": "",
             "TWR FREQ IS 120.2, CTC CD ON 121.4": "",
-            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}": "%r",
-            "ALL AIRCRAFT ADVISE GROUND CONTROL PRIOR TO PUSHBACK": ""
+            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}": "%r"
         },
         "KTPA":
         {
@@ -80,7 +79,8 @@
             "FREQ 121.7 OTS": "",
             "RY \\d{1,2}[LR] ALS OTS": "%r",
             "RY \\d{1,2}[LR] SFL OTS": "%r",
-            "RY \\d{1,2}[LR] RVR OTS": "%r"
+            "RY \\d{1,2}[LR] RVR OTS": "%r",
+            "ALL AIRCRAFT ADVISE GROUND CONTROL PRIOR TO PUSHBACK": ""
         },
         "KPBI":
         {
