@@ -41,7 +41,7 @@ __[Download v1.4.3](https://github.com/glott/vATISLoad/releases/latest/download/
 
 - Is the script doing nothing the first time you run it?
   - It is likely installing required libraries to run. You will see a popup the first time this happens. If you don't see a popup, that means the required libraries are installed.
-  - Alternatively, run [vATISLoad_install_packages.py](https://github.com/glott/vATISLoad/raw/refs/heads/main/vATISLoad_install_packages.py)
+  - Alternatively, run [vATISLoad_package_installer.py](https://github.com/glott/vATISLoad/raw/refs/heads/main/vATISLoad_package_installer.py)
  
 - Is vATIS being opened automatically by the script?
   - If yes, then that's a good sign!
