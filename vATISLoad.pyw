@@ -16,8 +16,8 @@ import importlib.util as il
 if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil'), 
             il.find_spec('pygetwindow')]:
 
-    os.system('cmd /K \"cls & echo Updating required packages for vATISLoad.' + \
-        ' & echo Please wait a few minutes for packages to install. & timeout 5 & exit\"')
+    os.system('cmd /K \"cls & echo Updating required libraries for vATISLoad.' + \
+        ' & echo Please wait a few minutes for libraries to install. & timeout 5 & exit\"')
     
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests']);

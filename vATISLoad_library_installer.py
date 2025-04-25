@@ -5,7 +5,7 @@ if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('
             il.find_spec('pygetwindow')]:
 
     os.system('cls')
-    print('Installing required packages for vATISLoad!')
+    print('Installing required libraries for vATISLoad!')
     time.sleep(2.5)
     
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
@@ -15,5 +15,5 @@ if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
 
     os.system('cls')
-    print('vATISLoad required packages successfully installed!')
+    print('vATISLoad required libraries successfully installed!')
     time.sleep(5)
