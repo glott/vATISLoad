@@ -266,37 +266,6 @@ def get_atis_replacements(stations):
             replacements[a] = config['replacements'][a]
 
     return replacements
-
-async def get_current_profile_data():
-    stations = list((await get_datis_stations()).keys())
-    stations = list(set(value.replace('_A', '').replace('_D', '') for value in stations))
-    stations.sort()
-    
-    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
-    data = {}
-    for filename in os.listdir(vatis_profiles):
-        if not filename.endswith('.json'): 
-            continue
-        
-        file_path = os.path.join(vatis_profiles, filename)
-        with open(file_path, 'r') as f:
-            data = json.load(f)['stations']
-        
-        profile_datis_stations = []
-        for s in data:
-            if s['identifier'] in profile_datis_stations:
-                continue
-            
-            for p in s['presets']:
-                if p['name'] == 'D-ATIS':
-                    profile_datis_stations.append(s['identifier'])
-                    break
-
-        profile_datis_stations.sort()
-        if profile_datis_stations == stations:
-            return data
-
-    return data
     
 async def get_contractions(station):
     async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
