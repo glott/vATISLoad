@@ -244,8 +244,8 @@ def get_atis_replacements(stations):
     return replacements
     
 async def get_contractions(station):
-    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
-        try:
+    try:
+        async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
             if '_D' in station:
                 payload = {'station': station[0:4], 'atisType': 'Departure'}
             elif '_A' in station:
@@ -265,8 +265,8 @@ async def get_contractions(station):
             c = {key: c[key] for key in reversed(c)}
 
             return  c
-        except asyncio.TimeoutError:
-            pass
+    except asyncio.TimeoutError:
+        pass
 
     return {}
 
