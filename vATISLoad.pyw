@@ -129,53 +129,29 @@ async def auto_select_facility():
     # Determine if CRC is open and a profile is loaded
     if 'CRC : 1' not in [w.title for w in pygetwindow.getAllWindows()]:
         return
-
-    # Determine if vATIS profile matches ARTCC
-    vatis_profiles = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\Profiles'
-    match_id = ''
-    profile_station_ids = {}
+    
     try:
-        for filename in os.listdir(vatis_profiles):
-            if not filename.endswith('.json'): 
-                continue
-            
-            file_path = os.path.join(vatis_profiles, filename)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                name, id = data['name'], data['id']
-                if artcc in name:
-                    match_id = id
-                    
-                profile_station_ids[id] = [s['id'] for s in data['stations']]       
-        
-        if len(match_id) < 0:
-            return
-
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
-            # Determine if profile is already loaded
-            m = ''
-            try:
-                await websocket.send(json.dumps({'type': 'getStations'}))
-                m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))
-            except asyncio.TimeoutError:
-                pass
-
-            if len(m) != 0:
-                station_ids = [s['id'] for s in m['stations']]
-                
+            # Determine if any vATIS profile matches ARTCC
+            await websocket.send(json.dumps({'type': 'getProfiles'}))
+            m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))['profiles']
+            
+            match_id = ''
+            for p in m:
+                if artcc in p['name']:
+                    match_id = p['id']
+        
+            if len(match_id) < 0:
+                return
+            
+            # Determine if current profile is already the desired profile
+            await websocket.send(json.dumps({'type': 'getActiveProfile'}))
+            m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))
+            
+            if 'id' in m:
                 # Do not select a profile if current profile is already selected
-                for p, ids in profile_station_ids.items():
-                    if set(ids) == set(station_ids):
-                        if p == match_id:
-                            return
-
-                # Disconnect ATISes if any are online
-                for s_id in station_ids:
-                    await websocket.send(json.dumps({'type': 'getAtis', 'value': {'id': s_id}}))
-                    m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))
-                
-                    if m['value']['networkConnectionStatus'] == 'Connected':
-                        await websocket.send(json.dumps({'type': 'disconnectAtis', 'value': {'id': s_id}}))
+                if m['id'] == match_id:
+                    return
             
             # Load new profile
             await websocket.send(json.dumps({'type': 'loadProfile', 'value': {'id': match_id}}))
