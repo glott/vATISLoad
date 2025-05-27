@@ -192,8 +192,6 @@ async def try_websocket(shutdown=RUN_UPDATE, limit=SHUTDOWN_LIMIT, initial=False
         
         t1 = time.time()
         if t1 - t0 > limit:
-            # os.system('cmd /K \"cls & echo vATIS closed or vATIS profile has not been selected.' + \
-            #     ' & echo Exiting vATISLoad. & timeout 5 & exit\"')
             if shutdown:
                 sys.exit()
             return
@@ -301,26 +299,31 @@ async def get_current_profile_data():
     return data
     
 async def get_contractions(station):
-    data = await get_current_profile_data()
+    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+        try:
+            if '_D' in station:
+                payload = {'station': station[0:4], 'atisType': 'Departure'}
+            elif '_A' in station:
+                payload = {'station': station[0:4], 'atisType': 'Arrival'}
+            else:
+                payload = {'station': station[0:4]}
+            await websocket.send(json.dumps({'type': 'getContractions', 'value': payload}))
+            m = json.loads(await asyncio.wait_for(websocket.recv(), timeout=0.25))
+    
 
-    c = {}
-    station_data = {}
-    for s in data:
-        if station[0:4] in s['identifier']:
-            if len(station) == 4:
-                station_data = s
-                break
-            elif (station[5] == 'D' and s['atisType'] == 'Departure') or \
-                (station[5] == 'A' and s['atisType'] == 'Arrival'):
-                station_data = s
+            c = {}
+            contractions = m['stations'][0]['contractions']
+            for cont in contractions:
+                c[contractions[cont]['text']] = '@' + cont
+            
+            c = dict(sorted(c.items(), key=lambda item: len(item[0])))
+            c = {key: c[key] for key in reversed(c)}
 
-    contractions = station_data['contractions']
-    for cont in contractions:
-        c[cont['text']] = '@' + cont['variableName']
-    c = dict(sorted(c.items(), key=lambda item: len(item[0])))
-    c = {key: c[key] for key in reversed(c)}
+            return  c
+        except asyncio.TimeoutError:
+            pass
 
-    return c
+    return {}
 
 def get_datis_data():
     data = {}
