@@ -9,7 +9,7 @@ RUN_UPDATE = True               # Set to False for testing
 
 #####################################################################
 
-import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio
+import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib
 from datetime import datetime
 
 import importlib.util as il
@@ -361,12 +361,16 @@ async def get_num_connections():
             n =+ 1
     return n
 
-async def configure_atises(connected_only=False, initial=False):
+async def configure_atises(connected_only=False, initial=False, temp_rep={}):
     stations = await get_datis_stations(initial=initial)
     replacements = get_atis_replacements(stations)
     atis_data = get_datis_data()
 
     atis_statuses = await get_atis_statuses()
+
+    for k, v in temp_rep.items():
+        for cont, cont_rep in (await get_contractions(k)).items():
+            temp_rep[k] = [elem.replace(cont_rep, cont) for elem in temp_rep[k]]
     
     for s, i in stations.items():
         if connected_only and atis_statuses[s] != 'Connected':
@@ -374,7 +378,10 @@ async def configure_atises(connected_only=False, initial=False):
 
         rep = []
         if s[0:4] in replacements:
-            rep = replacements[s[0:4]]
+            rep = replacements[s[0:4]].copy()
+            if s in temp_rep:
+                for tr in temp_rep[s]:
+                    rep[tr.strip()] = ''
         
         v = {'id': i, 'preset': 'D-ATIS'}
         v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
@@ -475,6 +482,22 @@ def open_vATIS():
     exe = os.getenv('LOCALAPPDATA') + '\\org.vatsim.vatis\\current\\vATIS.exe'
     subprocess.Popen(exe);
 
+async def get_connected_atis_data():
+    stations = await get_datis_stations()
+    atis_statuses = await get_atis_statuses()
+
+    connected_atis_data = {}
+    
+    for station in [k for k, v in atis_statuses.items() if v == 'Connected']:
+        payload = {'type': 'getAtis', 'value': {'id': stations[station]}}
+        async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+            await websocket.send(json.dumps(payload))
+
+            m = json.loads(await websocket.recv())['value']
+            connected_atis_data[station] = [m['airportConditions'], m['notams']]
+
+    return connected_atis_data
+
 async def disconnect_over_connection_limit(delay=True):
     if True:
         time.sleep(5)
@@ -492,6 +515,31 @@ async def disconnect_over_connection_limit(delay=True):
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
             await websocket.send(json.dumps(payload))
 
+def find_deleted_portions(original, modified):
+    sequence_matcher = difflib.SequenceMatcher(None, original, modified)
+    
+    deleted_portions = []
+    for tag, i1, i2, j1, j2 in sequence_matcher.get_opcodes():
+        if tag == 'delete':  
+            deleted_portions.append(original[i1:i2])
+    
+    return deleted_portions
+
+def compare_atis_data(prev_data, new_data):
+    compared_output = {}
+
+    for station in prev_data:
+        if station not in new_data:
+            continue
+        
+        conditionDiff = find_deleted_portions(prev_data[station][0], new_data[station][0])
+        notamDiff = find_deleted_portions(prev_data[station][1], new_data[station][1])
+
+        if len(conditionDiff) > 0 or len(notamDiff) > 0:
+            compared_output[station] = conditionDiff + notamDiff
+
+    return compared_output
+
 async def main():
     if RUN_UPDATE:
         update_vATISLoad()
@@ -500,14 +548,23 @@ async def main():
     open_vATIS()
     await configure_atises(initial=True)
     await connect_atises()
+    
+    prev_data = await get_connected_atis_data()
     await disconnect_over_connection_limit()
 
+    k, temp_rep = 0, []
     while not DISABLE_AUTOUPDATES:
         for i in range(0, 15):
+            # Capture temporary replacements after first 5 minutes
+            if k == 5:
+                new_data = await get_connected_atis_data()
+                temp_rep = compare_atis_data(prev_data, new_data)
+            
             await try_websocket()
             time.sleep(60)
+            k += 1
             
-        await configure_atises(connected_only=True)
+        await configure_atises(connected_only=True, temp_rep=temp_rep)
 
 if __name__ == "__main__":
     # Use first line for Desktop, second line for Jupyter
