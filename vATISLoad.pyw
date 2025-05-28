@@ -306,7 +306,9 @@ async def get_datis(station, atis_data, replacements):
     datis = datis.replace('NOTICE TO AIR MISSIONS, NOTAMS. ', 'NOTAMS... ') \
         .replace('NOTICE TO AIR MISSIONS. ', 'NOTAMS... ') \
         .replace('NOTICE TO AIR MEN. ', 'NOTAMS... ') \
-        .replace('NOTICE TO AIRMEN. ', 'NOTAMS... ')
+        .replace('NOTICE TO AIRMEN. ', 'NOTAMS... ') \
+        .replace('NOTAMS. ', 'NOTAMS... ') \
+        .replace('NOTAM. ', 'NOTAMS... ')
 
     # Replace defined replacements
     for r in replacements:
