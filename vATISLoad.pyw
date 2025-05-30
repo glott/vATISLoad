@@ -385,7 +385,7 @@ async def configure_atises(connected_only=False, initial=False, temp_rep={}):
                 for tr in temp_rep[s]:
                     rep[tr.strip()] = ''
         
-        v = {'id': i, 'preset': 'D-ATIS'}
+        v = {'id': i, 'preset': 'D-ATIS', 'syncAtisLetter': True}
         v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
 
         if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL':

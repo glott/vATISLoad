@@ -2,7 +2,7 @@
 
 _by Josh Glottmann_
 
-**Version 1.4.4** - 05/28/2025
+**Version 1.4.4** - 05/30/2025
 
 Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.app/) by [Justin Shannon](https://github.com/JustinShannon). D-ATIS data is automatically uplinked to vATIS after selecting a profile and gets refreshed every 15 minutes. 
 
@@ -20,8 +20,11 @@ __[Download v1.4.4](https://github.com/glott/vATISLoad/releases/latest/download/
 1) Open CRC and connect to the network.
 2) Launch `vATISLoad.pyw`.
 3) Select a profile in vATIS.
-4) Wait while vATIS automatically uplinks D-ATIS data and attempts to connect your ATISes.
-5) vATISLoad will automatically refresh D-ATIS data every 15 minutes until vATIS is shutdown.
+4) vATISLoad will attempt to uplink D-ATIS data and connect ATISes for you.
+  - D-ATIS data will be refreshed every 15 minutes until vATIS is shutdown.
+  - Within the first 5 minutes of launching vATISLoad, any text deleted from the `AIRPORT CONDITIONS` or `NOTAMS` sections of a station will be persistently deleted until restarting vATISLoad. Practically, this means you can delete "junk" text and it will not be included in any future D-ATIS updates. 
+
+\* _Note: if vATIS is updating, vATISLoad may fail to start vATIS properly. Launch vATIS first, wait for it to update, then launch vATISLoad again._
 
 ###  Replacements
 
