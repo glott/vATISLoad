@@ -21,8 +21,8 @@ __[Download v1.4.4](https://github.com/glott/vATISLoad/releases/latest/download/
 2) Launch `vATISLoad.pyw`.
 3) Select a profile in vATIS.
 4) vATISLoad will attempt to uplink D-ATIS data and connect ATISes for you.
-  - D-ATIS data will be refreshed every 15 minutes until vATIS is shutdown.
-  - Within the first 5 minutes of launching vATISLoad, any text deleted from the `AIRPORT CONDITIONS` or `NOTAMS` sections of a station will be persistently deleted until restarting vATISLoad. Practically, this means you can delete "junk" text and it will not be included in any future D-ATIS updates. 
+    - D-ATIS data will be refreshed every 15 minutes until vATIS is shutdown.
+    - Within the first 5 minutes of launching vATISLoad, any text deleted from the `AIRPORT CONDITIONS` or `NOTAMS` sections of a station will be persistently deleted until restarting vATISLoad. Practically, this means you can delete "junk" text and it will not be included in any future D-ATIS updates. 
 
 \* _Note: if vATIS is updating, vATISLoad may fail to start vATIS properly. Launch vATIS first, wait for it to update, then launch vATISLoad again._
 
