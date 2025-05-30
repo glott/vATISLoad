@@ -556,17 +556,18 @@ async def main():
 
     k, temp_rep = 0, []
     while not DISABLE_AUTOUPDATES:
-        for i in range(0, 15):
-            # Capture temporary replacements after first 5 minutes
-            if k == 5:
-                new_data = await get_connected_atis_data()
-                temp_rep = compare_atis_data(prev_data, new_data)
-            
+        # Sleep for 5 minutes
+        for i in range(0, 5):            
             await try_websocket()
             time.sleep(60)
-            k += 1
-            
+        
+        # Capture temporary replacements after first 5 minutes
+        if k == 0:
+            new_data = await get_connected_atis_data()
+            temp_rep = compare_atis_data(prev_data, new_data)
+        
         await configure_atises(connected_only=True, temp_rep=temp_rep)
+        k += 1
 
 if __name__ == "__main__":
     # Use first line for Desktop, second line for Jupyter
