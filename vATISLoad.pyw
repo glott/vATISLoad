@@ -102,7 +102,7 @@ def determine_active_callsign(return_artcc_only=False):
 
     try:
         lastPos = crc_data['LastUsedPositionId']
-        crc_ARTCC = os.path.join('ARTCCs') + os.sep + crc_data['ArtccId'] + '.json'
+        crc_ARTCC = os.path.join(crc_path, 'ARTCCs') + os.sep + crc_data['ArtccId'] + '.json'
         with open(crc_ARTCC, 'r') as f:
             data = json.load(f)
 
