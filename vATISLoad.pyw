@@ -9,7 +9,7 @@ RUN_UPDATE = True               # Set to False for testing
 
 #####################################################################
 
-import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib
+import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib, winreg
 from datetime import datetime
 
 import importlib.util as il
@@ -69,7 +69,14 @@ def update_vATISLoad():
     os.execv(sys.executable, ['python'] + sys.argv)
 
 def determine_active_callsign(return_artcc_only=False):
-    crc_profiles = os.getenv('LOCALAPPDATA') + '\\CRC\\Profiles'
+    crc_path = ''
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'SOFTWARE\\CRC')
+        crc_path, value_type = winreg.QueryValueEx(key, 'Install_Dir')
+    except FileNotFoundError as ignored:
+        crc_path = os.path.join(os.getenv('LOCALAPPDATA'), 'CRC')
+    
+    crc_profiles = os.path.join(crc_path, 'Profiles')
     crc_name = ''
     crc_data = {}
     crc_lastused_time = '2020-01-01T08:00:00'
@@ -95,7 +102,7 @@ def determine_active_callsign(return_artcc_only=False):
 
     try:
         lastPos = crc_data['LastUsedPositionId']
-        crc_ARTCC = os.getenv('LOCALAPPDATA') + '\\CRC\\ARTCCs\\' + crc_data['ArtccId'] + '.json'
+        crc_ARTCC = os.path.join(crc_path, 'ARTCCs') + os.sep + crc_data['ArtccId'] + '.json'
         with open(crc_ARTCC, 'r') as f:
             data = json.load(f)
 
