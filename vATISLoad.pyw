@@ -123,7 +123,7 @@ async def auto_select_facility():
     if artcc is None:
         return
     
-    if not AUTO_SELECT_FACILITY and not artcc in ['ZOA', 'ZMA']:
+    if not AUTO_SELECT_FACILITY and not artcc in ['ZOA', 'ZMA', 'ZDC']:
         return
 
     # Determine if CRC is open and a profile is loaded
