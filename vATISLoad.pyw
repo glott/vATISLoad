@@ -134,7 +134,12 @@ async def auto_select_facility():
         return
 
     # Determine if CRC is open and a profile is loaded
-    if 'CRC : 1' not in [w.title for w in pygetwindow.getAllWindows()]:
+    crc_found = False
+    for win in [w.title for w in pygetwindow.getAllWindows()]:
+        if 'CRC : 1' in win:
+            crc_found = True
+
+    if not crc_found:
         return
     
     try:
