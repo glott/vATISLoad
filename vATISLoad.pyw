@@ -348,7 +348,7 @@ async def get_datis(station, atis_data, replacements):
 
     # Split at NOTAMs
     if 'NOTAMS... ' in datis:
-        atis_info = datis.split('NOTAMS... ')
+        atis_info = datis.split('NOTAMS... ', maxsplit=1)
     else:
         atis_info = [datis, '']
     
