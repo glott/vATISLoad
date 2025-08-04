@@ -157,7 +157,8 @@
             "RWY \\d{1,2}[LR]? PAPIS, OTS": "",
             "SAU OTS": "",
             "SOUTH FIELD GROUND CONTROL FREQUENCY USE 126.0": "",
-            "UNAUTH LASER ILLUMINATION EVENT. AT \\d{4}": "%r"
+            "UNAUTH LASER ILLUMINATION EVENT. AT \\d{4}": "%r",
+            "NO PATTERN WORK": ""
         },
         "KSJC":
         {
