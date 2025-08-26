@@ -158,7 +158,8 @@
             "SAU OTS": "",
             "SOUTH FIELD GROUND CONTROL FREQUENCY USE 126.0": "",
             "UNAUTH LASER ILLUMINATION EVENT. AT \\d{4}": "%r",
-            "NO PATTERN WORK": ""
+            "NO PATTERN WORK": "",
+            "PATTERN WORK UNAVAILABLE": ""
         },
         "KSJC":
         {
