@@ -159,7 +159,8 @@
             "SOUTH FIELD GROUND CONTROL FREQUENCY USE 126.0": "",
             "UNAUTH LASER ILLUMINATION EVENT. AT \\d{4}": "%r",
             "NO PATTERN WORK": "",
-            "PATTERN WORK UNAVAILABLE": ""
+            "PATTERN WORK UNAVAILABLE": "",
+            "TFR IN EFFECT .+?\\.": ""
         },
         "KSJC":
         {
