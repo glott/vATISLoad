@@ -10,14 +10,16 @@ RUN_UPDATE = True               # Set to False for testing
 #####################################################################
 
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib, winreg
-from datetime import datetime
+from datetime import datetime, timezone
 
 import importlib.util as il
 if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil'), 
             il.find_spec('pygetwindow')]:
 
-    os.system('cmd /K \"cls & echo Updating required libraries for vATISLoad.' + \
-        ' & echo Please wait a few minutes for libraries to install. & timeout 5 & exit\"')
+    os.system('cmd /K \"cls & echo Updating required libraries for vATISLoad.' +
+        ' & echo Please wait a few minutes for libraries to install. & echo.' +
+        ' & echo If this does not work, try using vATISLoad_library_installer.py (see the vATISLoad README).' +
+        ' & timeout 15 & exit\"')
     
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests']);
@@ -308,6 +310,17 @@ async def get_datis(station, atis_data, replacements):
         if a['airport'] != station[0:4] or a['type'] != atis_type:
             continue
         datis = a['datis']
+        
+        # Ignore D-ATIS more than 1.75 hours old
+        try: 
+            t_updated = datetime.strptime(a['updatedAt'][:26], "%Y-%m-%dT%H:%M:%S.%f")
+            t_updated = t_updated.replace(tzinfo=timezone.utc)
+            t_now = datetime.now(timezone.utc)
+
+            if (t_now - t_updated).total_seconds() / 3600 > 1.75:
+                return atis_info
+        except Exception as ignored:
+            pass
 
     if len(datis) == 0:
         return atis_info
