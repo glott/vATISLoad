@@ -301,7 +301,7 @@ async def get_datis(station, atis_data, replacements):
     elif '_D' in station:
         atis_type = 'dep'
 
-    atis_info = ['D-ATIS NOT AVBL', '']
+    atis_info = ['D-ATIS NOT AVBL.', '']
     if 'error' in atis_data:
         return atis_info
 
@@ -310,7 +310,7 @@ async def get_datis(station, atis_data, replacements):
         if a['airport'] != station[0:4] or a['type'] != atis_type:
             continue
         datis = a['datis']
-        
+
         # Ignore D-ATIS more than 1.75 hours old
         try: 
             t_updated = datetime.strptime(a['updatedAt'][:26], "%Y-%m-%dT%H:%M:%S.%f")
@@ -413,7 +413,7 @@ async def configure_atises(connected_only=False, initial=False, temp_rep={}):
         v = {'id': i, 'preset': 'D-ATIS', 'syncAtisLetter': True}
         v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
 
-        if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL':
+        if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL.':
             continue
         
         payload = {'type': 'configureAtis', 'value': v}
