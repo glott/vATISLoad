@@ -91,9 +91,9 @@ def determine_active_callsign(return_artcc_only=False):
                     dt1 = datetime.strptime(crc_lastused_time, '%Y-%m-%dT%H:%M:%S')
                     if 'LastUsedAt' not in data or data['LastUsedAt'] == None:
                         continue
-                    dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0], '%Y-%m-%dT%H:%M:%S')
+                    dt2 = datetime.strptime(data['LastUsedAt'].split('.')[0].replace('Z',''), '%Y-%m-%dT%H:%M:%S')
                     if dt2 > dt1:
-                        crc_lastused_time = data['LastUsedAt'].split('.')[0]
+                        crc_lastused_time = data['LastUsedAt'].split('.')[0].replace('Z','')
                         crc_name = data['Name']
                         crc_data = data
     except Exception as ignored:
