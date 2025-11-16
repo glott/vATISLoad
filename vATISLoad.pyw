@@ -287,7 +287,7 @@ async def get_contractions(station):
 def get_datis_data():
     data = {}
     try:
-        url = 'https://datis.clowd.io/api/all'
+        url = 'https://atis.info/api/all'
         data =  json.loads(requests.get(url, timeout=2.5).text)
     except Exception as ignored:
         os.system('cmd /K \"cls & echo Unable to fetch D-ATIS data. & timeout 5 & exit\"')
