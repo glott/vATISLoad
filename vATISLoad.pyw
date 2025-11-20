@@ -9,7 +9,7 @@ RUN_UPDATE = True               # Set to False for testing
 
 #####################################################################
 
-import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib, winreg
+import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib, winreg, argparse
 from datetime import datetime, timezone
 
 import importlib.util as il
@@ -436,22 +436,32 @@ def determine_position_from_id(positions, position_id):
     
     return None
 
-async def connect_atises():
+async def connect_atises(airport_override=None):
     stations = await get_datis_stations()
     atis_statuses = await get_atis_statuses()
     disconnected_atises = [k for k, v in atis_statuses.items() if v == 'Disconnected']
     n_connected = len([k for k, v in atis_statuses.items() if v == 'Connected'])
 
-    active_callsign = determine_active_callsign()
-    if active_callsign is not None:
-        suf = active_callsign[1]
-        if suf == 'TWR' or suf == 'GND' or suf == 'DEL' or suf == 'RMP':
-            stations_temp = {}
-            for da in disconnected_atises:
-                if active_callsign[0] in da and da in stations:
-                    stations_temp[da] = stations[da]
-            
-            stations = stations_temp
+    # If airport override is provided, filter to only those airports
+    if airport_override is not None:
+        stations_temp = {}
+        for da in disconnected_atises:
+            airport_code = da[:4]  # Extract airport code (e.g., 'KSFO' from 'KSFO_A')
+            if airport_code.upper() in [a.upper() for a in airport_override] and da in stations:
+                stations_temp[da] = stations[da]
+        stations = stations_temp
+    else:
+        # Original logic: auto-select based on active callsign
+        active_callsign = determine_active_callsign()
+        if active_callsign is not None:
+            suf = active_callsign[1]
+            if suf == 'TWR' or suf == 'GND' or suf == 'DEL' or suf == 'RMP':
+                stations_temp = {}
+                for da in disconnected_atises:
+                    if active_callsign[0] in da and da in stations:
+                        stations_temp[da] = stations[da]
+                
+                stations = stations_temp
 
     n = 0
     for s, i in stations.items():
@@ -568,13 +578,19 @@ def compare_atis_data(prev_data, new_data):
     return compared_output
 
 async def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='vATIS Auto-Loader')
+    parser.add_argument('--airports', nargs='+', metavar='ICAO',
+                       help='Optional list of airport ICAO codes to activate (e.g., KSFO KOAK)')
+    args = parser.parse_args()
+
     if RUN_UPDATE:
         update_vATISLoad()
 
     kill_open_instances()
     open_vATIS()
     await configure_atises(initial=True)
-    await connect_atises()
+    await connect_atises(airport_override=args.airports)
     
     prev_data = await get_connected_atis_data()
     await disconnect_over_connection_limit()
