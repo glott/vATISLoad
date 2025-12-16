@@ -47,6 +47,7 @@
             "\\d+ / \\d+ / \\d+ AT \\d{4} ZULU, RUNWAY \\d\\d[LR] CONDITION CODE": "%r",
             "RWY \\d\\d[LR] CONDITION CODES": "%r",
             "RWY \\d\\d[LR] CONDITION CODE": "%r",
+            "RY \\d\\d[LR] THRESHOLD LGTS OTS.": "%r",
             "CTC CD ON 121.4": "",
             "CTC FSS FOR INFO": "",
             "CTC GND 121.4 FOR PUSHBACK": "",
@@ -62,7 +63,8 @@
             "TWR FREQ IS 119.3, CTC CD ON 121.4": "",
             "TWR FREQ IS 120.2": "",
             "TWR FREQ IS 120.2, CTC CD ON 121.4": "",
-            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}": "%r"
+            "UNAUTH LASER ULLIMINATION EVENT AT \\d{4} ZULU \\d{1,4} MILE FINAL AT \\d{1,4} FEET, \\w{3,} IN COLOR, FROM THE \\w{3,}": "%r",
+            "TWR FREQ FOR CD, GND, AND TAXI IS 119.3": ""
         },
         "KTPA":
         {
@@ -85,6 +87,7 @@
             "RY \\d{1,2}[LR] ALS OTS": "%r",
             "RY \\d{1,2}[LR] SFL OTS": "%r",
             "RY \\d{1,2}[LR] RVR OTS": "%r",
+            "RY \\d{1,2}[LR] PAPI OTS": "%r",
             "ALL AIRCRAFT ADVISE GROUND CONTROL PRIOR TO PUSHBACK": ""
         },
         "KPBI":
@@ -107,6 +110,7 @@
             "USE CAUTION DRONE ACTIVITY \\d{1,2} NM \\w{1,} OF PBI AT OR BELOW \\d{1,4} FT": "%r",
             "USE CAUTION FIRE WORKS OVER MAR A LAGO STARTING AT \\w{1,} \\w{1,} PM": "%r",
             "USE CAUTION FOR UNAUTHORIZED LASER EVENT \\w{1,} MILES \\w{1,} OF PALM BEACH AIRPORT \\w{1,} IN COLOR": "%r",
+            "USE CAUTION \\w{1,} LASER ILLUMINATION REPORTED \\w{1,} MILES \\w{1,} OF THE AIRPORT": "%r",
             "PALM BEACH TACAN OTS": ""
         },
         "KRSW":
@@ -131,6 +135,7 @@
             "VFR SERVICES AVAILABLE ONLY TO AIRCRAFT WITH TRANSPONDERS AND WILL BE LIMITED TO SAFETY ALERTS, TRAFFIC ADVISORIES, AND SEQUENCING TO SOWTH WEST FLORIDA INTERNATIONAL AIRPORT": "",
             "VFR SERVICES AVAILABLE ONLY TO AIRCRAFT WITH TRANSPONDERSAND WILL BE LIMITED TO SAFETY ALERTS, TRAFFIC ADVISORIES, AND SEQUENCING TO SOWTH WEST FLORIDA INTERNATIONAL AIRPORT": "",
             "RWY 6/24 LEAD OFF CL MARKINGS FADED": "",
+            "MOWING \\w{1,} SIDE RWY \\d{1,2}": "%r",
             "RSW TACAN OTS": ""
         },
         "KSFO":
