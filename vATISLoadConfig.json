@@ -88,7 +88,8 @@
             "RY \\d{1,2}[LR] SFL OTS": "%r",
             "RY \\d{1,2}[LR] RVR OTS": "%r",
             "RY \\d{1,2}[LR] PAPI OTS": "%r",
-            "ALL AIRCRAFT ADVISE GROUND CONTROL PRIOR TO PUSHBACK": ""
+            "ALL AIRCRAFT ADVISE GROUND CONTROL PRIOR TO PUSHBACK": "",
+            "RY 10,28 EDGE LGTS OTS": ""
         },
         "KPBI":
         {
@@ -111,7 +112,9 @@
             "USE CAUTION FIRE WORKS OVER MAR A LAGO STARTING AT \\w{1,} \\w{1,} PM": "%r",
             "USE CAUTION FOR UNAUTHORIZED LASER EVENT \\w{1,} MILES \\w{1,} OF PALM BEACH AIRPORT \\w{1,} IN COLOR": "%r",
             "USE CAUTION \\w{1,} LASER ILLUMINATION REPORTED \\w{1,} MILES \\w{1,} OF THE AIRPORT": "%r",
-            "PALM BEACH TACAN OTS": ""
+            "PALM BEACH TACAN OTS": "",
+            "RVAV": "RNAV",
+            "TFR IN EFFECT CHECK NOTAMS": ""
         },
         "KRSW":
         {
