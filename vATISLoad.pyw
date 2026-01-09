@@ -256,7 +256,49 @@ def get_atis_replacements(stations):
             replacements[a] = config['replacements'][a]
 
     return replacements
-    
+
+def get_user_config():
+    config = {}
+    config_path = os.path.join(os.path.dirname(sys.argv[0]), 'vATISLoadUserConfig.json')
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+    except Exception as ignored:
+        pass
+    return config
+
+def apply_user_modifications(airport, conditions, notams, user_config):
+    if airport not in user_config:
+        return conditions, notams
+
+    cfg = user_config[airport]
+
+    # Apply conditions modifications
+    if 'conditions' in cfg:
+        for text in cfg['conditions'].get('remove', []):
+            conditions = conditions.replace(text, '')
+        append_text = cfg['conditions'].get('append', '')
+        if append_text:
+            if conditions and not conditions.endswith(' '):
+                conditions += ' '
+            conditions += append_text
+
+    # Apply notams modifications
+    if 'notams' in cfg:
+        for text in cfg['notams'].get('remove', []):
+            notams = notams.replace(text, '')
+        append_text = cfg['notams'].get('append', '')
+        if append_text:
+            if notams and not notams.endswith(' '):
+                notams += ' '
+            notams += append_text
+
+    # Clean up extra spaces
+    conditions = re.sub(r'\s+', ' ', conditions).strip()
+    notams = re.sub(r'\s+', ' ', notams).strip()
+
+    return conditions, notams
+
 async def get_contractions(station):
     try:
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
@@ -392,6 +434,7 @@ async def configure_atises(connected_only=False, initial=False, temp_rep={}):
     stations = await get_datis_stations(initial=initial)
     replacements = get_atis_replacements(stations)
     atis_data = get_datis_data()
+    user_config = get_user_config()
 
     atis_statuses = await get_atis_statuses()
 
@@ -412,6 +455,8 @@ async def configure_atises(connected_only=False, initial=False, temp_rep={}):
         
         v = {'id': i, 'preset': 'D-ATIS', 'syncAtisLetter': True}
         v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
+        v['airportConditionsFreeText'], v['notamsFreeText'] = apply_user_modifications(
+            s[0:4], v['airportConditionsFreeText'], v['notamsFreeText'], user_config)
 
         if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL.':
             continue
