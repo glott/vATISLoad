@@ -29,6 +29,7 @@
             "UAS ACTIVITY REPORTED, \\d{1,2} MILES \\w{1,} OF MIA \\w{3,} THOUSAND \\w{3,} HUNDRED": "%r",
             "UNAUTHORIZED LASER ILLUMINATION AT \\d{4} ZULU, \\d{1,2} MILES \\w{3,} OF, MIA, AT \\d{1,4} THOUSAND FEET \\w{3,} IN COLOR": "%r",
             "UNAUTHORIZED LASER ILLUMINATION AT \\d{4} ZULU, \\d{1,2} \\w{3,} OF, MIA, \\w{3,} IN COLOR": "%r",
+            "DHP, VKZ VOR OTS": "",
             "VKZ VOR OTS": "",
             "DHP VOR OTS": "",
             "CHECK NOTAMS FOR TFR": "",
