@@ -105,7 +105,7 @@ def determine_active_callsign(return_artcc_only=False):
     try:
         lastPos = crc_data['LastUsedPositionId']
         crc_ARTCC = os.path.join(crc_path, 'ARTCCs') + os.sep + crc_data['ArtccId'] + '.json'
-        with open(crc_ARTCC, 'r') as f:
+        with open(crc_ARTCC, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         pos = determine_position_from_id(data['facility']['positions'], lastPos)
@@ -582,7 +582,7 @@ async def main():
     parser = argparse.ArgumentParser(description='vATIS Auto-Loader')
     parser.add_argument('--airports', nargs='+', metavar='ICAO',
                        help='Optional list of airport ICAO codes to activate (e.g., KSFO KOAK)')
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     if RUN_UPDATE:
         update_vATISLoad()
