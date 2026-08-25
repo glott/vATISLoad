@@ -93,7 +93,7 @@
             "ALL AIRCRAFT ADVISE GROUND CONTROL PRIOR TO PUSHBACK": "",
             "RY 10,28 EDGE LGTS OTS": ""
         },
-        "KPBI":
+        "KDJT":
         {
             "AUTHORIZED DRONES \\d{1,2} MILES \\w{1,} OF THE AIRPORT AOB \\d{1,4} FT AGL": "%r",
             "BA ADVZYS IN EFCT": "",
