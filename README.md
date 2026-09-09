@@ -58,7 +58,7 @@ __[Download v1.4.7](https://github.com/glott/vATISLoad/releases/latest/download/
 - If D-ATIS information was uplinked, did your ATISes connect?
   - If yes, then you're all set! If no, make sure you have an active connection in CRC. 
 
-- For futher troubleshooting, try the following steps:
+- For further troubleshooting, try the following steps:
 
   1. Quit vATIS
   2. Rename `vATISLoad.pyw` to `vATISLoad.py` (dropping the `w`). If you can’t see the file extension, open the `View` menu in File Explorer then tick `File name extensions` in the `Show/hide` section.
