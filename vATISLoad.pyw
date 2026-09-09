@@ -12,22 +12,19 @@ RUN_UPDATE = True               # Set to False for testing
 import subprocess, sys, os, time, json, re, uuid, ctypes, asyncio, difflib, winreg, argparse
 from datetime import datetime, timezone
 
-import importlib.util as il
-if None in [il.find_spec('requests'), il.find_spec('websockets'), il.find_spec('psutil'), 
-            il.find_spec('pygetwindow')]:
+import importlib, importlib.util as il
+if None in [il.find_spec(m) for m in ('requests', 'websockets', 'psutil', 'pygetwindow')]:
+    python = sys.executable.replace('pythonw.exe', 'python.exe')
 
-    os.system('cmd /K \"cls & echo Updating required libraries for vATISLoad.' +
-        ' & echo Please wait a few minutes for libraries to install. & echo.' +
-        ' & echo If this does not work, try using vATISLoad_library_installer.py (see the vATISLoad README).' +
-        ' & timeout 15 & exit\"')
-    
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'websockets']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psutil']);
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygetwindow']);
+    cmd = ('echo Updating required libraries for vATISLoad. '
+           '& echo Please wait a few minutes for libraries to install. & echo. '
+           '& echo If this does not work, try vATISLoad_library_installer.py (see the README). & echo. '
+           f'& "{python}" -m pip install --upgrade pip '
+           f'& "{python}" -m pip install requests websockets psutil pygetwindow '
+           '& echo. & echo Done. & timeout 5')
 
-os.system('cls')
+    subprocess.call(f'cmd /C "{cmd}"', creationflags=subprocess.CREATE_NEW_CONSOLE)
+    importlib.invalidate_caches()
 
 import requests, websockets, psutil, pygetwindow
 
