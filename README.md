@@ -2,11 +2,11 @@
 
 _by Josh Glottmann_
 
-**Version 1.4.6** - 09/20/2025
+**Version 1.4.7** - 09/08/2026
 
 Fetches and loads AIRNC D-ATISs for use with [vATIS](https://vatis.app/) by [Justin Shannon](https://github.com/JustinShannon). D-ATIS data is automatically uplinked to vATIS after selecting a profile and gets refreshed every 15 minutes. 
 
-__[Download v1.4.6](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.pyw)__ 
+__[Download v1.4.7](https://github.com/glott/vATISLoad/releases/latest/download/vATISLoad.pyw)__ 
 
 ### Installation
 
