@@ -2,7 +2,6 @@
 ############################# vATISLoad #############################
 #####################################################################
 
-DISABLE_AUTOUPDATES = False     # Set to True to disable auto-updates
 SHUTDOWN_LIMIT = 60 * 5         # Time delay to exit script
 AUTO_SELECT_FACILITY = False    # Enable/disable auto-select facility
 RUN_UPDATE = True               # Set to False for testing
@@ -40,7 +39,7 @@ def update_vATISLoad():
     with open(sys.argv[0], 'r') as FileObj:
         i = 0
         for line in FileObj:
-            if ('DISABLE_AUTOUPDATES =' in line or 'RUN_UPDATE =' in line 
+            if ('RUN_UPDATE =' in line 
                 or 'SHUTDOWN_LIMIT =' in line or 'AUTO_SELECT_FACILITY' in line) and i < 10:
                 pass
             elif i > len(online_file) or len(line.strip()) != len(online_file[i].strip()):
@@ -408,10 +407,10 @@ async def configure_atises(connected_only=False, initial=False, temp_rep={}):
                     rep[tr.strip()] = ''
         
         v = {'id': i, 'preset': 'D-ATIS', 'syncAtisLetter': True}
-        v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
+        # v['airportConditionsFreeText'], v['notamsFreeText'] = await get_datis(s, atis_data, rep)
 
-        if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL.':
-            continue
+        # if connected_only and v['airportConditionsFreeText'] == 'D-ATIS NOT AVBL.':
+        #     continue
         
         payload = {'type': 'configureAtis', 'value': v}
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
@@ -432,6 +431,28 @@ def determine_position_from_id(positions, position_id):
             return [prefix, suffix]
     
     return None
+
+async def get_atis_status(station_id):
+    async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
+        await websocket.send(json.dumps({'type': 'getAtis', 'value': {'id': station_id}}))
+        m = json.loads(await websocket.recv())['value']
+        return m['networkConnectionStatus']
+
+async def wait_for_connection(station_id, timeout=10):
+    # Poll until the station reports Connected. Returns False if the connect
+    # attempt fails (Connecting -> Disconnected) or the timeout passes.
+    t0 = time.time()
+    seen_connecting = False
+    while time.time() - t0 < timeout:
+        status = await get_atis_status(station_id)
+        if status == 'Connected':
+            return True
+        if status == 'Connecting':
+            seen_connecting = True
+        elif status == 'Disconnected' and seen_connecting:
+            return False
+        await asyncio.sleep(0.5)
+    return False
 
 async def connect_atises(airport_override=None):
     stations = await get_datis_stations()
@@ -462,21 +483,22 @@ async def connect_atises(airport_override=None):
 
     n = 0
     for s, i in stations.items():
-        if n + n_connected >= 4:
+        # Re-read statuses each pass; Connecting counts toward the limit
+        atis_statuses = await get_atis_statuses()
+        n_connected = len([k for k, v in atis_statuses.items() if v in ('Connected', 'Connecting')])
+        if n_connected >= 4:
             break
-        
-        if s not in disconnected_atises:
+
+        if atis_statuses[s] != 'Disconnected':
             continue
-        
+
         payload = {'type': 'connectAtis', 'value': {'id': i}}
         async with websockets.connect('ws://127.0.0.1:49082/', close_timeout=0.01) as websocket:
             await websocket.send(json.dumps(payload))
 
-            try:
-                m = await asyncio.wait_for(websocket.recv(), timeout=0.1)
-                n += 1
-            except Exception as ignored:
-                pass
+        # Wait for this one to finish connecting before starting the next
+        connected = await wait_for_connection(i)
+        print(s, 'connected' if connected else 'failed to connect')
 
 def kill_open_instances():
     prev_instances = {}
@@ -589,23 +611,8 @@ async def main():
     await configure_atises(initial=True)
     await connect_atises(airport_override=args.airports)
     
-    prev_data = await get_connected_atis_data()
-    await disconnect_over_connection_limit()
-
-    k, temp_rep = 0, []
-    while not DISABLE_AUTOUPDATES:
-        # Sleep for 5 minutes
-        for i in range(0, 5):            
-            await try_websocket()
-            time.sleep(60)
-        
-        # Capture temporary replacements after first 5 minutes
-        if k == 0:
-            new_data = await get_connected_atis_data()
-            temp_rep = compare_atis_data(prev_data, new_data)
-        
-        await configure_atises(connected_only=True, temp_rep=temp_rep)
-        k += 1
+    # prev_data = await get_connected_atis_data()
+    # await disconnect_over_connection_limit()
 
 if __name__ == "__main__":
     # Use first line for Desktop, second line for Jupyter
