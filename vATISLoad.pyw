@@ -525,6 +525,8 @@ def open_vATIS():
             data = json.load(f)
             if 'autoFetchAtisLetter' in data:
                 data['autoFetchAtisLetter'] = True
+            if 'autoFetchDatis' in data:
+                data['autoFetchDatis'] = True
         with open(config_path, 'w') as f:
             json.dump(data, f, indent=2)
     except Exception as ignored:
