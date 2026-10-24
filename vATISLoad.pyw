@@ -451,7 +451,7 @@ async def wait_for_connection(station_id, timeout=10):
             seen_connecting = True
         elif status == 'Disconnected' and seen_connecting:
             return False
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
     return False
 
 async def connect_atises(airport_override=None):
